@@ -39,6 +39,8 @@ UPDATE_PACKAGE "luci-app-tailscale" "asvow/luci-app-tailscale" "main"
 UPDATE_PACKAGE "luci-app-nlbwmon" "immortalwrt/luci" "master" "applications/luci-app-nlbwmon"
 UPDATE_PACKAGE "luci-app-autoreboot" "immortalwrt/luci" "master" "applications/luci-app-autoreboot"
 UPDATE_PACKAGE "luci-app-lucky" "gdy666/luci-app-lucky" "main"
+UPDATE_PACKAGE "luci-app-ttyd" "immortalwrt/luci" "master" "applications/luci-app-ttyd"
+UPDATE_PACKAGE "luci-app-openclash" "vernesong/OpenClash" "master"
 
 # UPDATE_PACKAGE "luci-app-ddns-go" "sirpdboy/luci-app-ddns-go" "main"
 # UPDATE_PACKAGE "luci-app-msd_lite" "ximiTech/luci-app-msd_lite" "main"

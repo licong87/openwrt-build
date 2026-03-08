@@ -20,9 +20,9 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - TARGET: ipq60xx-official-nowifi
+          - TARGET: ipq60xx-imm-nowifi
             CONFIG_FILE: nowifi.config
-          - TARGET: ipq60xx-official-wifi
+          - TARGET: ipq60xx-imm-wifi
             CONFIG_FILE: wifi.config
 
     #调用公用编译核心WRT-CORE.yml

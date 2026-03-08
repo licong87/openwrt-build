@@ -1,5 +1,5 @@
 #CI项目
-name: ipq60xx-official-immortal
+name: ipq60xx-immortalwrt
 
 #CI计划
 on:

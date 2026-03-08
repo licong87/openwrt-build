@@ -39,4 +39,4 @@ jobs:
       #软件源
       FEEDS_CONF: feeds.conf.default
       #配置文件路径
-      CONFIG_FILE: ./config/imm/${{matrix.CONFIG_FILE}}
+      CONFIG_FILE: ./config/libWrt/${{matrix.CONFIG_FILE}}

@@ -25,7 +25,7 @@ jobs:
             CONFIG_FILE: nowifi-ress01.config
           - TARGET: ipq60xx-libWrt-nowifi-znm2
             CONFIG_FILE: nowifi-znm2.config
-          - TARGET: ipq60xx-libWrt-wifi
+          - TARGET: ipq60xx-libWrt-wifi-ress01
             CONFIG_FILE: wifi-ress01.config
 
     #调用公用编译核心WRT-CORE.yml

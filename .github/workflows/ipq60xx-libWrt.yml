@@ -21,8 +21,10 @@ jobs:
       #max-parallel: 3
       matrix:
         include:
-          - TARGET: ipq60xx-libWrt-nowifi
-            CONFIG_FILE: nowifi.config
+          - TARGET: ipq60xx-libWrt-nowifi-ress01
+            CONFIG_FILE: nowifi-ress01.config
+          - TARGET: ipq60xx-libWrt-nowifi-znm2
+            CONFIG_FILE: nowifi-znm2.config
           - TARGET: ipq60xx-libWrt-wifi
             CONFIG_FILE: wifi.config
 

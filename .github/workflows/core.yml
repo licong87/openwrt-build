@@ -63,7 +63,7 @@ jobs:
           swap-storage: true
 
       - name: Checkout
-        uses: actions/checkout@v3.1.0
+        uses: actions/checkout@v4
 
       - name: Initialization environment
         env:
@@ -163,7 +163,7 @@ jobs:
           echo "EOF" >> $GITHUB_ENV
 
       - name: Release Firmware
-        uses: softprops/action-gh-release@v2.1.0
+        uses: softprops/action-gh-release@v2
         if: steps.compile.outputs.status == 'success' && !cancelled()
         with:
           tag_name: ${{env.TARGET}}_${{env.FILE_DATE}}

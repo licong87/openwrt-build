@@ -138,6 +138,12 @@ jobs:
         run: |
           cd openwrt
           echo -e "$(nproc) thread compile"
+          
+          # 👇 针对顽固的 libffi 强行清理坏档（核爆指令）
+          rm -rf build_dir/target-*/libffi-*
+          make package/feeds/packages/libffi/clean V=s
+          
+          # 👇 下面是原本的编译流程
           make -j$(nproc) || make -j1 || make -j1 V=s
           echo "status=success" >> $GITHUB_OUTPUT
           echo "DATE=$(date +"%Y-%m-%d %H:%M:%S")" >> $GITHUB_ENV

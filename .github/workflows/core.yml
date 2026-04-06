@@ -93,12 +93,12 @@ jobs:
           echo "WRT_HASH=$(git log -1 --pretty=format:'%h')" >> $GITHUB_ENV
           echo "OPENWRT_PATH=$PWD" >> $GITHUB_ENV
 
-  #    - name: Cache
-  #     uses: stupidloud/cachewrtbuild@main
-  #     with:
-  #        ccache: true
-  #        mixkey: ${{env.REPO_SOURCE}}-${{env.REPO_BRANCH}}-${{env.WRT_HASH}}
-  #        prefix: ${{ env.OPENWRT_PATH }}
+      - name: Cache
+       uses: stupidloud/cachewrtbuild@main
+       with:
+          ccache: true
+          mixkey: ${{env.REPO_SOURCE}}-${{env.REPO_BRANCH}}-${{env.WRT_HASH}}
+          prefix: ${{ env.OPENWRT_PATH }}
 
       - name: Update Feeds
         run: |

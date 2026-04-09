@@ -39,15 +39,15 @@ UPDATE_PACKAGE "luci-app-dae" "sbwml/luci-app-dae" "main"
 
 UPDATE_PACKAGE "nikki" "nikkinikki-org/OpenWrt-nikki" "main"
 UPDATE_PACKAGE "passwall-packages" "Openwrt-Passwall/openwrt-passwall-packages" "main"
-UPDATE_PACKAGE "passwall" "Openwrt-Passwall/openwrt-passwall" "main" "pkg"
-UPDATE_PACKAGE "passwall2" "Openwrt-Passwall/openwrt-passwall2" "main" "pkg"
+#UPDATE_PACKAGE "passwall" "Openwrt-Passwall/openwrt-passwall" "main" "pkg"
+#UPDATE_PACKAGE "passwall2" "Openwrt-Passwall/openwrt-passwall2" "main" "pkg"
 
-UPDATE_PACKAGE "alist" "sbwml/luci-app-alist" "main"
-UPDATE_PACKAGE "mosdns" "sbwml/luci-app-mosdns" "v5"
-UPDATE_PACKAGE "vnt" "lazyoop/networking-artifact" "main" "pkg"
-UPDATE_PACKAGE "easytier" "lazyoop/networking-artifact" "main" "pkg"
+#UPDATE_PACKAGE "alist" "sbwml/luci-app-alist" "main"
+#UPDATE_PACKAGE "mosdns" "sbwml/luci-app-mosdns" "v5"
+#UPDATE_PACKAGE "vnt" "lazyoop/networking-artifact" "main" "pkg"
+#UPDATE_PACKAGE "easytier" "lazyoop/networking-artifact" "main" "pkg"
 
-UPDATE_PACKAGE "luci-app-gecoosac" "lwb1978/openwrt-gecoosac" "main"
+#UPDATE_PACKAGE "luci-app-gecoosac" "lwb1978/openwrt-gecoosac" "main"
 UPDATE_PACKAGE "luci-app-tailscale" "asvow/luci-app-tailscale" "main"
 
 # UPDATE_PACKAGE "luci-app-ddns-go" "sirpdboy/luci-app-ddns-go" "main"

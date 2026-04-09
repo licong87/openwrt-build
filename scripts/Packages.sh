@@ -37,6 +37,8 @@ UPDATE_PACKAGE "dae" "sbwml/openwrt_helloworld" "v5" "pkg"
 UPDATE_PACKAGE "luci-app-dae" "sbwml/openwrt_helloworld" "v5" "pkg"
 
 UPDATE_PACKAGE "nikki" "nikkinikki-org/OpenWrt-nikki" "main"
+UPDATE_PACKAGE "luci-app-timewol" "VIKINGYFY/packages" "main" "pkg"
+UPDATE_PACKAGE "luci-app-wolplus" "VIKINGYFY/packages" "main" "pkg"
 #UPDATE_PACKAGE "passwall-packages" "Openwrt-Passwall/openwrt-passwall-packages" "main"
 #UPDATE_PACKAGE "passwall" "Openwrt-Passwall/openwrt-passwall" "main" "pkg"
 #UPDATE_PACKAGE "passwall2" "Openwrt-Passwall/openwrt-passwall2" "main" "pkg"

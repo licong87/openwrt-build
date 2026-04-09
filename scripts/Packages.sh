@@ -29,16 +29,15 @@ UPDATE_PACKAGE "kucat" "sirpdboy/luci-theme-kucat" "master"
 UPDATE_PACKAGE "kucat-config" "sirpdboy/luci-app-kucat-config" "master"
 UPDATE_PACKAGE "infinityfreedom" "xiaoqingfengATGH/luci-theme-infinityfreedom" "master"
 
-# ================= 🚀 注入 sbwml 满血版 dae (内核 + 简易面板) =================
+# ================= 🚀 完美拉取 sbwml 最新满血版 dae =================
 # 1. 彻底删除官方 feeds 里自带的通用阉割版
 rm -rf ../feeds/packages/net/dae
-# 2. 拉取 sbwml 的满血 dae 核心 (支持 CGO/blake3) 和配套的 Luci 界面
-UPDATE_PACKAGE "dae" "sbwml/openwrt_pkgs" "main" "pkg"
-UPDATE_PACKAGE "luci-app-dae" "sbwml/luci-app-dae" "main"
-============================================================================
+# 2. 从 sbwml 的 helloworld 仓库 (v5 分支) 提取最新满血版 dae 和中文面板
+UPDATE_PACKAGE "dae" "sbwml/openwrt_helloworld" "v5" "pkg"
+UPDATE_PACKAGE "luci-app-dae" "sbwml/openwrt_helloworld" "v5" "pkg"
 
 UPDATE_PACKAGE "nikki" "nikkinikki-org/OpenWrt-nikki" "main"
-UPDATE_PACKAGE "passwall-packages" "Openwrt-Passwall/openwrt-passwall-packages" "main"
+#UPDATE_PACKAGE "passwall-packages" "Openwrt-Passwall/openwrt-passwall-packages" "main"
 #UPDATE_PACKAGE "passwall" "Openwrt-Passwall/openwrt-passwall" "main" "pkg"
 #UPDATE_PACKAGE "passwall2" "Openwrt-Passwall/openwrt-passwall2" "main" "pkg"
 

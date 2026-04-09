@@ -127,7 +127,7 @@ cp -r $GITHUB_WORKSPACE/package/* ./
 # 1. 彻底删除官方 feeds 里自带的通用版(阉割版) daed
 rm -rf ../feeds/packages/net/daed
 # 2. 将本地 patches 目录下的满血版 daed 文件夹拷贝到当前 package 目录参与编译
-cp -r $GITHUB_WORKSPACE/patches/daed ./
+cp -r $GITHUB_WORKSPACE/patch/daed ./
 
 # 修复libubox报错（按需保留）
 #sed -i '/include $(INCLUDE_DIR)\/cmake.mk/a PKG_BUILD_FLAGS:=no-werror' ../package/libs/libubox/Makefile

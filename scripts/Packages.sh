@@ -24,12 +24,13 @@ UPDATE_PACKAGE() {
 UPDATE_PACKAGE "argon" "jerrykuku/luci-theme-argon" "master"
 UPDATE_PACKAGE "luci-app-argon-config" "jerrykuku/luci-app-argon-config" "master"
 
-# ================= 🚀 注入 sbwml 满血版 daed (高成功率方案) =================
-# 1. 彻底删除官方 feeds 里自带的通用版(阉割版) daed
-rm -rf ../feeds/packages/net/daed
-# 2. 从 sbwml 的插件库拉取满血版 (支持 blake3)
-UPDATE_PACKAGE "daed" "sbwml/openwrt_pkgs" "main" "pkg"
-# ===========================================================================
+# ================= 🚀 注入 sbwml 满血版 dae (内核 + 简易面板) =================
+# 1. 彻底删除官方 feeds 里自带的通用阉割版
+rm -rf ../feeds/packages/net/dae
+# 2. 拉取 sbwml 的满血 dae 核心 (支持 CGO/blake3) 和配套的 Luci 界面
+UPDATE_PACKAGE "dae" "sbwml/openwrt_pkgs" "main" "pkg"
+UPDATE_PACKAGE "luci-app-dae" "sbwml/luci-app-dae" "main"
+============================================================================
 
 UPDATE_PACKAGE "nikki" "nikkinikki-org/OpenWrt-nikki" "main"
 UPDATE_PACKAGE "passwall-packages" "Openwrt-Passwall/openwrt-passwall-packages" "main"

@@ -131,8 +131,7 @@ fi
 
 if [ -d "$GITHUB_WORKSPACE/patch/daed" ]; then
     cp -rf $GITHUB_WORKSPACE/patch/daed ./
+fi
 	# ================= 🚀 补齐 dae 的核心依赖 =================
 # 下载最新版 v2ray-geodata 规则库 (专治 dae 找不到 geoip/geosite 的报错)
 git clone https://github.com/sbwml/v2ray-geodata package/v2ray-geodata
-
-fi

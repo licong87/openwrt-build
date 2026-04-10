@@ -21,11 +21,11 @@ jobs:
       #max-parallel: 3
       matrix:
         include:
-          - TARGET: ipq60xx-libWrt-nowifi-ress01
+          - TARGET: ipq60xx-immwrt-nowifi-ress01
             CONFIG_FILE: nowifi-ress01.config
-          - TARGET: ipq60xx-libWrt-nowifi-znm2
+          - TARGET: ipq60xx-immWrt-nowifi-znm2
             CONFIG_FILE: nowifi-znm2.config
-          - TARGET: ipq60xx-libWrt-wifi-ress01
+          - TARGET: ipq60xx-imm-wifi-ress01
             CONFIG_FILE: wifi-ress01.config
 
     #调用公用编译核心WRT-CORE.yml
@@ -42,4 +42,4 @@ jobs:
       #软件源
       FEEDS_CONF: feeds.conf.default
       #配置文件
-      CONFIG_FILE: ./config/libWrt/${{matrix.CONFIG_FILE}}     
+      CONFIG_FILE: ./config/arm/${{matrix.CONFIG_FILE}}     

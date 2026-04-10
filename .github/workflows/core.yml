@@ -157,8 +157,9 @@ jobs:
         if: steps.compile.outputs.status == 'success' && !cancelled()
         run: |
           cd openwrt
+          # 提取插件列表并存入环境变量 PLUGIN_BODY 中
           echo "PLUGIN_BODY<<EOF" >> $GITHUB_ENV
-          echo "### 📦 已集成的 luci-app 插件列表：" >> $GITHUB_ENV
+          echo "### 📦 已集成的核心插件列表：" >> $GITHUB_ENV
           grep "CONFIG_PACKAGE_luci-app-" .config | grep "=y" | cut -d'=' -f1 | sed 's/CONFIG_PACKAGE_//g' >> $GITHUB_ENV
           echo "EOF" >> $GITHUB_ENV
 
@@ -169,8 +170,16 @@ jobs:
           tag_name: ${{env.TARGET}}_${{env.FILE_DATE}}
           files: ${{ env.FIRMWARE }}/*
           body: |
-            云编译openwrt固件。
-            
-            源码：${{env.REPO_URL}}
-            分支：${{env.REPO_BRANCH}}
-            平台：${{env.TARGET}}
+            后台地址：`192.168.1.1`
+            默认密码：无 (留空直接登录)
+            默认 WIFI：`ImmortalWrt` (仅限无线设备)
+            WIFI 密码：无
+
+            ⚙️ **【编译核心参数】**
+            编译平台：${{env.TARGET}}
+            源码仓库：${{env.REPO_URL}}
+            源码分支：${{env.REPO_BRANCH}}
+            源码提交：${{env.WRT_HASH}}
+            编译时间：${{env.DATE}}
+
+            ${{env.PLUGIN_BODY}}

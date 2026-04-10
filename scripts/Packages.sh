@@ -118,17 +118,17 @@ UPDATE_VERSION() {
 	done
 }
 
-#删除官方的默认插件 (已移除 dae* 误杀)
-rm -rf ../feeds/luci/applications/luci-app-{passwall*,mosdns,dockerman,bypass*}
-rm -rf ../feeds/packages/net/v2ray-geodata
-cp -r $GITHUB_WORKSPACE/package/* ./
+# ================= 🚀 清理官方冲突插件 =================
+# 一次性连根拔起不需要的官方自带插件（包括 daed 的本体和面板）
+rm -rf ../feeds/luci/applications/luci-app-{passwall*,mosdns,dockerman,bypass*,daed*}
+rm -rf ../feeds/packages/net/{v2ray-geodata,daed*}
 
-# ================= 🚀 注入满血版 daed (开启 CGO，支持 blake3) =================
-# 1. 彻底删除官方 feeds 里自带的通用版(阉割版) daed
-rm -rf ../feeds/packages/net/daed
-# 2. 将本地 patches 目录下的满血版 daed 文件夹拷贝到当前 package 目录参与编译
-cp -r $GITHUB_WORKSPACE/patch/daed ./
+# ================= 🚀 注入本地自定义包 =================
+# 包含你的满血版 daed 和其他本地包
+if [ -d "$GITHUB_WORKSPACE/package" ]; then
+    cp -rf $GITHUB_WORKSPACE/package/* ./
+fi
 
-# 修复libubox报错（按需保留）
-#sed -i '/include $(INCLUDE_DIR)\/cmake.mk/a PKG_BUILD_FLAGS:=no-werror' ../package/libs/libubox/Makefile
-#sed -i 's|TARGET_CFLAGS += -I$(STAGING_DIR)/usr/include|& -Wno-error=format-nonliteral -Wno-format-nonliteral|' ../package/libs/libubox/Makefile
+if [ -d "$GITHUB_WORKSPACE/patch/daed" ]; then
+    cp -rf $GITHUB_WORKSPACE/patch/daed ./
+fi

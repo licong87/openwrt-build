@@ -42,5 +42,5 @@ jobs:
       #软件源
       FEEDS_CONF: feeds.conf.default
       #配置文件
-      CONFIG_FILE: ./config/libWrt/${{matrix.CONFIG_FILE}}     
+      CONFIG_FILE: ./config/arm/${{matrix.CONFIG_FILE}}     
 

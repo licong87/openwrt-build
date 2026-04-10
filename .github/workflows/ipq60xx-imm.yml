@@ -1,5 +1,5 @@
 #CI项目
-name: ipq60xx-libWrt
+name: ipq60xx-imm
 
 #CI计划
 on:

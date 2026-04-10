@@ -117,21 +117,3 @@ UPDATE_VERSION() {
 		fi
 	done
 }
-
-# ================= 🚀 清理官方冲突插件 =================
-# 一次性连根拔起不需要的官方自带插件（包括 daed 的本体和面板）
-rm -rf ../feeds/luci/applications/luci-app-{passwall*,mosdns,dockerman,bypass*,daed*}
-rm -rf ../feeds/packages/net/{v2ray-geodata,daed*}
-
-# ================= 🚀 注入本地自定义包 =================
-# 包含你的满血版 daed 和其他本地包
-if [ -d "$GITHUB_WORKSPACE/package" ]; then
-    cp -rf $GITHUB_WORKSPACE/package/* ./
-fi
-
-if [ -d "$GITHUB_WORKSPACE/patch/daed" ]; then
-    cp -rf $GITHUB_WORKSPACE/patch/daed ./
-fi
-	# ================= 🚀 补齐 dae 的核心依赖 =================
-# 下载最新版 v2ray-geodata 规则库 (专治 dae 找不到 geoip/geosite 的报错)
-git clone https://github.com/sbwml/v2ray-geodata package/v2ray-geodata

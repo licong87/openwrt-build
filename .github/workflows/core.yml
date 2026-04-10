@@ -170,6 +170,7 @@ jobs:
           tag_name: ${{env.TARGET}}_${{env.FILE_DATE}}
           files: ${{ env.FIRMWARE }}/*
           body: |
+            🌐 **【设备默认信息】**
             后台地址：`192.168.1.1`
             默认密码：无 (留空直接登录)
             默认 WIFI：`ImmortalWrt` (仅限无线设备)

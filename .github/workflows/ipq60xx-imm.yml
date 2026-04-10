@@ -34,11 +34,11 @@ jobs:
       #编译平台
       TARGET: ${{matrix.TARGET}}
       #源码
-      REPO_SOURCE: LibWrt
+      REPO_SOURCE: immortalwrt
       #源码地址
-      REPO_URL: https://github.com/LiBwrt/openwrt-6.x
+      REPO_URL: https://github.com/immortalwrt/immortalwrt
       #源码分支
-      REPO_BRANCH: main-nss
+      REPO_BRANCH: master
       #软件源
       FEEDS_CONF: feeds.conf.default
       #配置文件

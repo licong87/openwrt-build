@@ -83,6 +83,12 @@ UPDATE_VERSION() {
 
 #UPDATE_VERSION "软件包名" "测试版，true，可选，默认为否"
 # 御三家底层核心引擎：强制追新 (同步最新协议与性能优化)
-# UPDATE_VERSION "sing-box"
+# UPDATE_VERSION "sing-box"  （不要最新，用下面1.2.4的）
 UPDATE_VERSION "mihomo"
 UPDATE_VERSION "dae"
+
+# 强行锁定 Sing-box 神仙兼容版本 (拯救小白专属 1.12.4)
+# ==========================================
+sed -i 's/PKG_VERSION:=.*/PKG_VERSION:=1.12.4/g' feeds/packages/net/sing-box/Makefile
+sed -i 's/PKG_HASH:=.*/PKG_HASH:=skip/g' feeds/packages/net/sing-box/Makefile
+

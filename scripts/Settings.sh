@@ -27,3 +27,7 @@ sed -i "/^define Device\/jdcloud_re-ss-01/,/^endef/ { /KERNEL_SIZE := 6144k/s//K
 # 修改系统默认时区为 亚洲/上海
 sed -i "s/timezone='UTC'/timezone='CST-8'/g" package/base-files/files/bin/config_generate
 sed -i "s/zonename='UTC'/zonename='Asia\/Shanghai'/g" package/base-files/files/bin/config_generate
+
+# 全局基础设施：补齐标准时区数据库 (修复 dae/Nikki 等 Go 程序日志为 UTC 的问题)
+echo "CONFIG_PACKAGE_zoneinfo-core=y" >> .config
+echo "CONFIG_PACKAGE_zoneinfo-asia=y" >> .config

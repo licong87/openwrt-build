@@ -149,6 +149,27 @@ jobs:
         run: |
           cd openwrt/bin/targets/*/*
           rm -rf packages
+          
+          # 1. 生成你想要的时间戳格式 (YY.MM.DD-HH.MM.SS)
+          TIMESTAMP=$(date +"%y.%m.%d-%H.%M.%S")
+          
+          # 2. 遍历所有固件文件，在扩展名前插入时间戳
+          for file in *; do
+            if [ -f "$file" ]; then
+              # 提取文件名前缀 (比如 immortalwrt-x86-64-generic-squashfs-combined)
+              base="${file%%.*}"
+              # 提取文件扩展名 (比如 img.gz)
+              ext="${file#*.}"
+              
+              # 重命名：前缀-时间戳.扩展名
+              if [ "$base" == "$file" ]; then
+                mv "$file" "${file}-${TIMESTAMP}"
+              else
+                mv "$file" "${base}-${TIMESTAMP}.${ext}"
+              fi
+            fi
+          done
+          
           echo "FIRMWARE=$PWD" >> $GITHUB_ENV
           echo "status=success" >> $GITHUB_OUTPUT
 

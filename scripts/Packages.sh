@@ -83,6 +83,6 @@ UPDATE_VERSION() {
 
 #UPDATE_VERSION "软件包名" "测试版，true，可选，默认为否"
 # 御三家底层核心引擎：强制追新 (同步最新协议与性能优化)
-UPDATE_VERSION "sing-box"
+# UPDATE_VERSION "sing-box"
 UPDATE_VERSION "mihomo"
 UPDATE_VERSION "dae"

@@ -9,7 +9,6 @@ mkdir -p files/etc
 echo "net.netfilter.nf_conntrack_udp_timeout=10" >> files/etc/sysctl.conf
 echo "net.netfilter.nf_conntrack_udp_timeout_stream=60" >> files/etc/sysctl.conf
 
-
 #高通平台调整
 if [[ $TARGET == *"ipq"* ]]; then
 	#取消nss相关feed
@@ -21,5 +20,6 @@ if [[ $TARGET == *"ipq"* ]]; then
 
 	echo "nss version has fixed!"	
 fi
+
 # 解除亚瑟内核封印：强行修改内核分区大小为 12M (配合大分区 U-Boot 使用)
 sed -i "/^define Device\/jdcloud_re-ss-01/,/^endef/ { /KERNEL_SIZE := 6144k/s//KERNEL_SIZE := 12288k/ }" target/linux/qualcommax/image/ipq60xx.mk

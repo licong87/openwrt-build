@@ -21,3 +21,5 @@ if [[ $TARGET == *"ipq"* ]]; then
 
 	echo "nss version has fixed!"	
 fi
+# 解除亚瑟内核封印：强行修改内核分区大小为 12M (配合大分区 U-Boot 使用)
+sed -i "/^define Device\/jdcloud_re-ss-01/,/^endef/ { /KERNEL_SIZE := 6144k/s//KERNEL_SIZE := 12288k/ }" target/linux/qualcommax/image/ipq60xx.mk

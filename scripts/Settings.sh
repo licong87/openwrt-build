@@ -23,3 +23,7 @@ fi
 
 # 解除亚瑟内核封印：强行修改内核分区大小为 12M (配合大分区 U-Boot 使用)
 sed -i "/^define Device\/jdcloud_re-ss-01/,/^endef/ { /KERNEL_SIZE := 6144k/s//KERNEL_SIZE := 12288k/ }" target/linux/qualcommax/image/ipq60xx.mk
+
+# 修改系统默认时区为 亚洲/上海
+sed -i "s/timezone='UTC'/timezone='CST-8'/g" package/base-files/files/bin/config_generate
+sed -i "s/zonename='UTC'/zonename='Asia\/Shanghai'/g" package/base-files/files/bin/config_generate

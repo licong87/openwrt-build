@@ -110,7 +110,11 @@ jobs:
       - name: Custom Settings
         run: |
           [ -e $CONFIG_FILE ] && mv $CONFIG_FILE openwrt/.config
-          # 加上这行，防止脚本在云端因为换行符报错
+          
+          # ⬇️ 搬回这里！既然这里是你的“福地”，咱们就按老规矩办
+          sed -i 's/PKG_VERSION:=.*/PKG_VERSION:=1.12.4/g' openwrt/feeds/packages/net/sing-box/Makefile
+          sed -i 's/PKG_HASH:=.*/PKG_HASH:=skip/g' openwrt/feeds/packages/net/sing-box/Makefile
+
           dos2unix $GITHUB_WORKSPACE/scripts/Settings.sh
           cd ./openwrt
           bash $GITHUB_WORKSPACE/scripts/Settings.sh

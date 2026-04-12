@@ -34,8 +34,5 @@ echo "CONFIG_PACKAGE_zoneinfo-asia=y" >> .config
 sed -i '/define Device\/zn_m2/a\  IMAGES += factory.ubi\n  IMAGE/factory.ubi := append-ubi' target/linux/qualcommax/image/ipq60xx.mk
 sed -i '/define Device\/jdcloud_re-ss-01/a\  IMAGES += factory.ubi\n  IMAGE/factory.ubi := append-ubi' target/linux/qualcommax/image/ipq60xx.mk
 
-# 8. 锁定 sing-box 版本
-sed -i 's/PKG_VERSION:=.*/PKG_VERSION:=1.12.4/g' feeds/packages/net/sing-box/Makefile
-
 # 9. 针对 x86 的 Nikki 编译补丁 (即使不编 x86 留着也无害，这是最稳的删法)
 find package/ -type f -path "*/nikki/Makefile" -exec sed -i '/define Build\/InstallDev/,/endef/d' {} \;

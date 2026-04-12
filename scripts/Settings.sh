@@ -31,3 +31,10 @@ sed -i "s/zonename='UTC'/zonename='Asia\/Shanghai'/g" package/base-files/files/b
 # 全局基础设施：补齐标准时区数据库 (修复 dae/Nikki 等 Go 程序日志为 UTC 的问题)
 echo "CONFIG_PACKAGE_zoneinfo-core=y" >> .config
 echo "CONFIG_PACKAGE_zoneinfo-asia=y" >> .config
+
+# 路径千万别带 openwrt/ 前缀，因为你已经 cd 进去了
+sed -i '/define Device\/zn_m2/a\  IMAGES += factory.ubi\n  IMAGE/factory.ubi := append-ubi' target/linux/qualcommax/image/ipq60xx.mk
+sed -i '/define Device\/jdcloud_re-ss-01/a\  IMAGES += factory.ubi\n  IMAGE/factory.ubi := append-ubi' target/linux/qualcommax/image/ipq60xx.mk
+
+# 锁定 sing-box 也要用相对路径
+sed -i 's/PKG_VERSION:=.*/PKG_VERSION:=1.12.4/g' feeds/packages/net/sing-box/Makefile

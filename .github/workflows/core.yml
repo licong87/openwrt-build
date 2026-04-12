@@ -111,6 +111,7 @@ jobs:
         run: |
           sed -i 's/PKG_VERSION:=.*/PKG_VERSION:=1.12.4/g' openwrt/feeds/packages/net/sing-box/Makefile
           sed -i 's/PKG_HASH:=.*/PKG_HASH:=skip/g' openwrt/feeds/packages/net/sing-box/Makefile
+          sed -i 's/IMAGES := sysupgrade.bin/IMAGES := sysupgrade.bin factory.ubi/g' openwrt/target/linux/qualcommax/image/ipq60xx.mk
           
       - name: Check Scripts
         run: |

@@ -107,23 +107,12 @@ jobs:
           ./scripts/feeds update -a
           ./scripts/feeds install -a        
 
-      - name: Inject Core Settings & Force Factory Image
+      - name: Custom Settings
         run: |
-          # 1. 锁定 Sing-box 版本为 1.12.4
-          sed -i 's/PKG_VERSION:=.*/PKG_VERSION:=1.12.4/g' openwrt/feeds/packages/net/sing-box/Makefile
-          sed -i 's/PKG_HASH:=.*/PKG_HASH:=skip/g' openwrt/feeds/packages/net/sing-box/Makefile
-          
-          # 2. 强行给【兆能 M2】注入 UBI 工厂包指令
-          sed -i '/define Device\/zn_m2/a\  IMAGES += factory.ubi' openwrt/target/linux/qualcommax/image/ipq60xx.mk
-          sed -i '/define Device\/zn_m2/a\  IMAGE/factory.ubi := append-ubi' openwrt/target/linux/qualcommax/image/ipq60xx.mk
-
-          # 3. 强行给【亚瑟】注入 UBI 工厂包指令
-          sed -i '/define Device\/jdcloud_re-ss-01/a\  IMAGES += factory.ubi' openwrt/target/linux/qualcommax/image/ipq60xx.mk
-          sed -i '/define Device\/jdcloud_re-ss-01/a\  IMAGE/factory.ubi := append-ubi' openwrt/target/linux/qualcommax/image/ipq60xx.mk
-          
-          # 4. 修改默认后台 IP (可选)
-          # 目前我把它注释掉了，如果你想改成 192.168.10.1，把下面这行的 # 号删掉就行
-          # sed -i 's/192.168.1.1/192.168.10.1/g' openwrt/package/base-files/files/bin/config_generate
+          [ -e $CONFIG_FILE ] && mv $CONFIG_FILE openwrt/.config
+          cd ./openwrt
+          # 所有的黑魔法都在这个脚本里完成
+          $GITHUB_WORKSPACE/scripts/Settings.sh
           
       - name: Check Scripts
         run: |

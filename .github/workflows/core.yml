@@ -140,7 +140,10 @@ jobs:
           [ -e $CONFIG_FILE ] && mv $CONFIG_FILE openwrt/.config
           cd ./openwrt
 
-          $GITHUB_WORKSPACE/scripts/Settings.sh         
+          $GITHUB_WORKSPACE/scripts/Settings.sh 
+
+          # ⬇️ 修复 x86 编译 Nikki 时多线程抢夺源码导致报错的终极补丁 ⬇️
+          find package/ -type f -path "*/nikki/Makefile" -exec sh -c 'echo -e "\ndefine Build/InstallDev\nendef" >> {}' \;         
 
       - name: Download package
         id: package

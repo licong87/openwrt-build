@@ -32,5 +32,5 @@ echo "CONFIG_PACKAGE_zoneinfo-asia=y" >> .config
 
 # 7. 强行注入 factory.ubi 生成规则 (注意：这里我用了标准的转义，确保格式正确)
 # 强行注入 factory.ubi 生成规则，并补齐闪存物理参数
-sed -i '/define Device\/zn_m2/a\  BLOCKSIZE := 128k\n  PAGESIZE := 2048\n  IMAGES += factory.ubi\n  IMAGE/factory.ubi := append-ubi' target/linux/qualcommax/image/ipq60xx.mk
-sed -i '/define Device\/jdcloud_re-ss-01/a\  BLOCKSIZE := 128k\n  PAGESIZE := 2048\n  IMAGES += factory.ubi\n  IMAGE/factory.ubi := append-ubi' target/linux/qualcommax/image/ipq60xx.mk
+# 强制修正 UBI 打包参数，解决兆能/亚瑟 PAGESIZE 缺失导致的报错
+sed -i 's/append-ubi,$(PAGESIZE),$(BLOCKSIZE)/append-ubi,2048,128k/g' include/image-commands.mk

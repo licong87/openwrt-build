@@ -143,7 +143,8 @@ jobs:
           $GITHUB_WORKSPACE/scripts/Settings.sh 
 
           # ⬇️ 修复 x86 编译 Nikki 时多线程抢夺源码导致报错的终极补丁 ⬇️
-          find package/ -type f -path "*/nikki/Makefile" -exec sh -c 'echo -e "\ndefine Build/InstallDev\nendef" >> {}' \;         
+          # ⬇️ 修正版：针对 Nikki 编译报错的精准修复 (不使用 echo，改用 sed 直接删除报错函数)
+          find package/ -type f -path "*/nikki/Makefile" -exec sed -i '/define Build\/InstallDev/,/endef/d' {} \;         
 
       - name: Download package
         id: package

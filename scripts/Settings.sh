@@ -34,6 +34,3 @@ echo "CONFIG_PACKAGE_zoneinfo-asia=y" >> .config
 # 强行注入 factory.ubi 生成规则，并补齐闪存物理参数
 sed -i '/define Device\/zn_m2/a\  BLOCKSIZE := 128k\n  PAGESIZE := 2048\n  IMAGES += factory.ubi\n  IMAGE/factory.ubi := append-ubi' target/linux/qualcommax/image/ipq60xx.mk
 sed -i '/define Device\/jdcloud_re-ss-01/a\  BLOCKSIZE := 128k\n  PAGESIZE := 2048\n  IMAGES += factory.ubi\n  IMAGE/factory.ubi := append-ubi' target/linux/qualcommax/image/ipq60xx.mk
-
-# 9. 针对 x86 的 Nikki 编译补丁 (即使不编 x86 留着也无害，这是最稳的删法)
-find package/ -type f -path "*/nikki/Makefile" -exec sed -i '/define Build\/InstallDev/,/endef/d' {} \;

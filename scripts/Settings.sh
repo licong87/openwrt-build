@@ -30,6 +30,9 @@ sed -i "s/zonename='UTC'/zonename='Asia\/Shanghai'/g" package/base-files/files/b
 echo "CONFIG_PACKAGE_zoneinfo-core=y" >> .config
 echo "CONFIG_PACKAGE_zoneinfo-asia=y" >> .config
 
+# 修复官方 feeds 源 libffi 3.4.7 路径缺失导致的编译中断 Bug
+sed -i '/fficonfig.h/ s/$/ || true/' feeds/packages/libs/libffi/Makefile
+
 # 7. 强行注入 factory.ubi 生成规则 (注意：这里我用了标准的转义，确保格式正确)
 # 强行注入 factory.ubi 生成规则，并补齐闪存物理参数
 # 强制修正 UBI 打包参数，解决兆能/亚瑟 PAGESIZE 缺失导致的报错

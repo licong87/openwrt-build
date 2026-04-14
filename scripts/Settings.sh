@@ -40,7 +40,7 @@ echo "🚀 开始下载满血版规则库，打造零等待固件..."
 # 1. 准备 dae 的规则目录 (V2Ray 标准路径，全小写)
 # ---------------------------------------------------------
 mkdir -p files/usr/share/v2ray
-echo "-> 下载 dae 专属 Loyalsoldier 规则库..."
+echo "-> 下载 Loyalsoldier 满血规则库..."
 curl -L -o files/usr/share/v2ray/geosite.dat https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geosite.dat
 curl -L -o files/usr/share/v2ray/geoip.dat https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geoip.dat
 
@@ -48,14 +48,15 @@ curl -L -o files/usr/share/v2ray/geoip.dat https://github.com/Loyalsoldier/v2ray
 # 2. 准备 Nikki (Mihomo) 的规则目录 (精准修正为 run 子目录)
 # ---------------------------------------------------------
 mkdir -p files/etc/nikki/run
-echo "-> 下载 Nikki 专属 MetaCubeX 规则库..."
 
-# 严格按照截图使用驼峰命名，并放入 run 目录
-curl -L -o files/etc/nikki/run/GeoSite.dat https://github.com/MetaCubeX/meta-rules-dat/releases/latest/download/geosite.dat
-curl -L -o files/etc/nikki/run/GeoIP.dat https://github.com/MetaCubeX/meta-rules-dat/releases/latest/download/geoip.dat
-curl -L -o files/etc/nikki/run/ASN.mmdb https://github.com/MetaCubeX/meta-rules-dat/releases/latest/download/asn.mmdb
+echo "-> 将 Loyalsoldier 规则“白嫖”给 Nikki 使用 (严格修正大小写)..."
+# 直接复制刚才下好的文件，瞬间完成，省去二次下载的时间！
+cp files/usr/share/v2ray/geosite.dat files/etc/nikki/run/GeoSite.dat
+cp files/usr/share/v2ray/geoip.dat files/etc/nikki/run/GeoIP.dat
 
-# 这两个是 Mihomo 的备用基础库，顺手塞进去防身
+echo "-> 下载 Nikki 专属的 mmdb 基础数据库..."
+# 这三个底层的库 Loyalsoldier 没有，还得老老实实去 MetaCubeX 官方下
+curl -L -o files/etc/nikki/run/ASN.mmdb https://github.com/MetaCubeX/meta-rules-dat/releases/latest/download/GeoLite2-ASN.mmdb
 curl -L -o files/etc/nikki/run/Country.mmdb https://github.com/MetaCubeX/meta-rules-dat/releases/latest/download/country.mmdb
 curl -L -o files/etc/nikki/run/geoip.metadb https://github.com/MetaCubeX/meta-rules-dat/releases/latest/download/geoip.metadb
 

@@ -23,7 +23,7 @@ jobs:
       #编译平台
       TARGET: x86-imm
       #源码
-      REPO_SOURCE: immortalwrt
+      REPO_SOURCE: immortal
       #源码地址
       REPO_URL: https://github.com/immortalwrt/immortalwrt
       #源码分支

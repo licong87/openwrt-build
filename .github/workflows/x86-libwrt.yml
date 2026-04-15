@@ -1,5 +1,5 @@
 #CI项目
-name: x86-LibWrt
+name: x86-libWrt
 
 #CI计划
 on:

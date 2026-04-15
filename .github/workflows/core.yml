@@ -149,20 +149,32 @@ jobs:
           cd openwrt
           
           # ==========================================
-          # 狙击战术：大部队冲锋前，单线程提前干掉 libffi
+          # 阶段 1：建造专属工具箱 (Tools) - 多线程跑，非常快
           # ==========================================
-          echo -e "-> [补丁] 正在单线程预编译 libffi..."
+          echo -e "-> 1. 正在编译基础工具 (Tools)..."
+          make tools/install -j$(nproc)
+          
+          # ==========================================
+          # 阶段 2：建造交叉编译链 (Toolchain) - 打地基
+          # ==========================================
+          echo -e "-> 2. 正在编译交叉编译链 (Toolchain)..."
+          make toolchain/install -j$(nproc)
+          
+          # ==========================================
+          # 阶段 3：狙击战术 - 单兵拔掉 libffi 钉子
+          # ==========================================
+          echo -e "-> 3. [补丁] 正在单线程预编译 libffi..."
           make package/feeds/packages/libffi/compile -j1 V=s
           
           # ==========================================
-          # 原有逻辑：全面开火，执行多线程核心编译
+          # 阶段 4：全面开火 - 编译剩下所有固件和插件
           # ==========================================
-          echo -e "-> $(nproc) thread compile..."
+          echo -e "-> 4. 大部队全面冲锋..."
           make -j$(nproc) || make -j1 || make -j1 V=s
           
           echo "status=success" >> $GITHUB_OUTPUT
           echo "DATE=$(date +"%Y-%m-%d %H:%M:%S")" >> $GITHUB_ENV
-          echo "FILE_DATE=$(date +"%Y.%m.%d")" >> $GITHUB_ENV         
+          echo "FILE_DATE=$(date +"%Y.%m.%d")" >> $GITHUB_ENV        
 
       - name: Organize files
         id: organize

@@ -23,11 +23,11 @@ jobs:
       #编译平台
       TARGET: x86-imm
       #源码
-      REPO_SOURCE: immortalwrt
+      REPO_SOURCE: LibWrt
       #源码地址
-      REPO_URL: https://github.com/immortalwrt/immortalwrt
+      REPO_URL: https://github.com/LiBwrt/openwrt-6.x
       #源码分支
-      REPO_BRANCH: master
+      REPO_BRANCH: main-nss
       #软件源
       FEEDS_CONF: feeds.conf.default
       #配置文件

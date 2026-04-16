@@ -79,32 +79,6 @@ jobs:
         cd openwrt
         make defconfig
 
-    # =========================
-    # 🔥 核心修复：libffi 自动补丁
-    # =========================
-    - name: 🔧 Fix libffi (Auto)
-      run: |
-        cd openwrt
-        echo "==> fixing libffi"
-
-        make package/libffi/download V=s
-
-        LIBFFI_DIR=$(find build_dir -type d -name "libffi-*" | head -n 1)
-
-        if [ -n "$LIBFFI_DIR" ]; then
-          make package/libffi/{clean,compile} V=s || true
-
-          FFICONFIG=$(find $LIBFFI_DIR -name fficonfig.h | head -n 1)
-
-          if [ -f "$FFICONFIG" ]; then
-            mkdir -p $LIBFFI_DIR/ipkg-install/usr/include
-            cp -f $FFICONFIG $LIBFFI_DIR/ipkg-install/usr/include/
-            echo "✔ libffi fixed"
-          else
-            echo "⚠️ fficonfig.h not found but continue"
-          fi
-        fi
-
     - name: 📦 Download
       run: |
         cd openwrt

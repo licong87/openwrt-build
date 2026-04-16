@@ -149,11 +149,11 @@ jobs:
           cd openwrt
           
           # ==========================================
-          # 【终极神级补丁】修复 libffi 路径名字对不上的 Bug
+          # 【终极神级补丁 V2】无视变量名，直接正则替换整行！
           # ==========================================
-          echo "-> 正在给 libffi 打物理补丁..."
-          sed -i 's/$(GNU_TARGET_NAME)\*/\*/g' feeds/packages/libs/libffi/Makefile 2>/dev/null || true
-          sed -i 's/$(GNU_TARGET_NAME)\*/\*/g' package/feeds/packages/libffi/Makefile 2>/dev/null || true
+          echo "-> 正在给 libffi 打物理补丁 V2..."
+          sed -i 's|^\([[:space:]]*\).*fficonfig\.h.*|\1$(CP) $(PKG_BUILD_DIR)/*/fficonfig.h $(1)/usr/include/|g' feeds/packages/libs/libffi/Makefile 2>/dev/null || true
+          sed -i 's|^\([[:space:]]*\).*fficonfig\.h.*|\1$(CP) $(PKG_BUILD_DIR)/*/fficonfig.h $(1)/usr/include/|g' package/feeds/packages/libffi/Makefile 2>/dev/null || true
           
           # ==========================================
           # 原有逻辑：全面开火，执行多线程核心编译

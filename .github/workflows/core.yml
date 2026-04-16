@@ -15,20 +15,16 @@ on:
       REPO_BRANCH:
         required: true
         type: string
-      FEEDS_CONF:
-        required: true
-        type: string
       CONFIG_FILE:
         required: true
         type: string
 
 env:
-  TARGET: ${{ inputs.TARGET }}
-  REPO_SOURCE: ${{ inputs.REPO_SOURCE }}
-  REPO_URL: ${{ inputs.REPO_URL }}
-  REPO_BRANCH: ${{ inputs.REPO_BRANCH }}
-  FEEDS_CONF: ${{ inputs.FEEDS_CONF }}
-  CONFIG_FILE: ${{ inputs.CONFIG_FILE }}
+  TARGET: ${{inputs.TARGET}}
+  REPO_SOURCE: ${{inputs.REPO_SOURCE}}
+  REPO_URL: ${{inputs.REPO_URL}}
+  REPO_BRANCH: ${{inputs.REPO_BRANCH}}
+  CONFIG_FILE: ${{inputs.CONFIG_FILE}}
   TZ: Asia/Shanghai
 
 jobs:
@@ -36,185 +32,138 @@ jobs:
     runs-on: ubuntu-22.04
 
     steps:
-      # =========================
-      # 释放空间
-      # =========================
-      - name: Free Disk Space
-        uses: jlumbroso/free-disk-space@main
-        with:
-          tool-cache: true
-          android: true
-          dotnet: true
-          haskell: true
-          large-packages: true
-          swap-storage: true
+    - name: 🧹 Free Disk
+      uses: jlumbroso/free-disk-space@main
+      with:
+        tool-cache: true
+        android: true
+        dotnet: true
+        haskell: true
+        large-packages: true
+        swap-storage: true
 
-      - name: Checkout
-        uses: actions/checkout@v3
+    - name: 📥 Checkout
+      uses: actions/checkout@v4
 
-      # =========================
-      # 初始化环境（稳定版）
-      # =========================
-      - name: Init Environment
-        run: |
-          sudo rm -rf /etc/apt/sources.list.d/* /usr/share/dotnet /usr/local/lib/android /opt/ghc
+    - name: ⚙️ Init Env
+      run: |
+        sudo apt update -y
+        sudo apt install -y \
+        build-essential clang flex bison g++ gawk gcc-multilib g++-multilib \
+        gettext git libncurses-dev libssl-dev python3 python3-distutils \
+        rsync unzip zlib1g-dev file wget libelf-dev autoconf automake \
+        libtool pkg-config texinfo
 
-          sudo apt-get update -y
-          sudo apt-get upgrade -y
+        sudo timedatectl set-timezone "$TZ"
 
-          sudo apt-get install -y \
-            build-essential clang flex bison g++ gawk \
-            gcc-multilib g++-multilib gettext git libncurses-dev \
-            libssl-dev python3-distutils rsync unzip zlib1g-dev \
-            file wget curl cmake ninja-build pkg-config \
-            libffi-dev libtool autoconf automake texinfo dos2unix
+        sudo mkdir -p /workdir
+        sudo chown runner:runner /workdir
 
-          sudo timedatectl set-timezone "$TZ"
+    - name: 📦 Clone Source
+      working-directory: /workdir
+      run: |
+        git clone --depth=1 $REPO_URL -b $REPO_BRANCH openwrt
+        ln -sf /workdir/openwrt $GITHUB_WORKSPACE/openwrt
+        cd openwrt
+        echo "WRT_HASH=$(git log -1 --pretty=format:'%h')" >> $GITHUB_ENV
 
-          git config --global user.email "actions@github.com"
-          git config --global user.name "GitHub Actions"
+    - name: 📡 Update Feeds
+      run: |
+        cd openwrt
+        ./scripts/feeds update -a
+        ./scripts/feeds install -a
 
-          # ✅ 关键修复点
-          sudo mkdir -p /workdir
-          sudo chown $USER:$USER /workdir
+    - name: ⚙️ Load Config
+      run: |
+        [ -e $CONFIG_FILE ] && mv $CONFIG_FILE openwrt/.config
+        cd openwrt
+        make defconfig
 
-      # =========================
-      # 拉源码
-      # =========================
-      - name: Clone Source
-        working-directory: /workdir
-        run: |
-          git clone --depth=1 $REPO_URL -b $REPO_BRANCH openwrt
-          ln -sf /workdir/openwrt $GITHUB_WORKSPACE/openwrt
+    # =========================
+    # 🔥 核心修复：libffi 自动补丁
+    # =========================
+    - name: 🔧 Fix libffi (Auto)
+      run: |
+        cd openwrt
+        echo "==> fixing libffi"
 
-          cd openwrt
-          echo "WRT_HASH=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
-          echo "OPENWRT_PATH=$PWD" >> $GITHUB_ENV
+        make package/libffi/download V=s
 
-      # =========================
-      # 缓存（大幅加速）
-      # =========================
-      - name: Cache
-        uses: stupidloud/cachewrtbuild@main
-        with:
-          ccache: true
-          mixkey: ${{ env.REPO_SOURCE }}-${{ env.REPO_BRANCH }}-${{ env.WRT_HASH }}
-          prefix: ${{ env.OPENWRT_PATH }}
+        LIBFFI_DIR=$(find build_dir -type d -name "libffi-*" | head -n 1)
 
-      # =========================
-      # 更新 feeds
-      # =========================
-      - name: Update Feeds
-        run: |
-          cd openwrt
-          ./scripts/feeds update -a
-          ./scripts/feeds install -a
+        if [ -n "$LIBFFI_DIR" ]; then
+          make package/libffi/{clean,compile} V=s || true
 
-      # =========================
-      # 自定义配置
-      # =========================
-      - name: Custom Settings
-        run: |
-          [ -e "$CONFIG_FILE" ] && mv "$CONFIG_FILE" openwrt/.config
+          FFICONFIG=$(find $LIBFFI_DIR -name fficonfig.h | head -n 1)
 
-          # 【老哥的专属补丁】：修复 libffi 编译时文件夹名字找不到的残脑 Bug
-          # 用 find 命令无死角找到 libffi 的 Makefile，强行把死板的架构名替换为通配符 *
-          find openwrt -path "*/libffi/Makefile" -exec sed -i 's/$(GNU_TARGET_NAME)\*/\*/g' {} +
-          find openwrt -path "*/libffi/Makefile" -exec sed -i 's/$(HOST_GNU_TARGET_NAME)\*/\*/g' {} +
+          if [ -f "$FFICONFIG" ]; then
+            mkdir -p $LIBFFI_DIR/ipkg-install/usr/include
+            cp -f $FFICONFIG $LIBFFI_DIR/ipkg-install/usr/include/
+            echo "✔ libffi fixed"
+          else
+            echo "⚠️ fficonfig.h not found but continue"
+          fi
+        fi
 
-          # 修复 sing-box 版本问题 (保留 GPT 的原本逻辑)
-          sed -i 's/PKG_VERSION:=.*/PKG_VERSION:=1.12.4/g' openwrt/feeds/packages/net/sing-box/Makefile || true
-          sed -i 's/PKG_HASH:=.*/PKG_HASH:=skip/g' openwrt/feeds/packages/net/sing-box/Makefile || true
+    - name: 📦 Download
+      run: |
+        cd openwrt
+        make download -j8
 
-          dos2unix $GITHUB_WORKSPACE/scripts/*.sh || true
+    - name: 🚀 Compile
+      run: |
+        cd openwrt
+        make -j$(nproc) || make -j1 || make -j1 V=s
 
-          cd openwrt
-          [ -f "$GITHUB_WORKSPACE/scripts/Settings.sh" ] && bash $GITHUB_WORKSPACE/scripts/Settings.sh
+        echo "status=success" >> $GITHUB_OUTPUT
+        echo "DATE=$(date +"%Y-%m-%d %H:%M:%S")" >> $GITHUB_ENV
+        echo "FILE_DATE=$(date +"%Y.%m.%d")" >> $GITHUB_ENV
 
-      # =========================
-      # 自定义包
-      # =========================
-      - name: Custom Packages
-        run: |
-          cd openwrt/package
-          [ -f "$GITHUB_WORKSPACE/scripts/Packages.sh" ] && bash $GITHUB_WORKSPACE/scripts/Packages.sh
-          [ -f "$GITHUB_WORKSPACE/scripts/Handles.sh" ] && bash $GITHUB_WORKSPACE/scripts/Handles.sh
+    - name: 📁 Organize
+      if: steps.compile.outputs.status == 'success'
+      run: |
+        cd openwrt/bin/targets/*/*
+        rm -rf packages
 
-      # =========================
-      # 下载依赖
-      # =========================
-      - name: Download
-        run: |
-          cd openwrt
-          make defconfig
-          make download -j8
+        TIMESTAMP=$(date +"%y.%m.%d-%H.%M.%S")
 
-          find dl -size -1024c -exec rm -f {} \;
+        for file in *; do
+          [ -f "$file" ] || continue
+          base="${file%%.*}"
+          ext="${file#*.}"
 
-      # =========================
-      # 编译
-      # =========================
-      - name: Compile
-        id: compile
-        run: |
-          cd openwrt
+          if [ "$base" == "$file" ]; then
+            mv "$file" "${file}-${TIMESTAMP}"
+          else
+            mv "$file" "${base}-${TIMESTAMP}.${ext}"
+          fi
+        done
 
-          echo "==> 开始编译..."
-          make -j$(nproc) || make -j1 V=s
+        echo "FIRMWARE=$PWD" >> $GITHUB_ENV
 
-          echo "status=success" >> $GITHUB_OUTPUT
-          echo "DATE=$(date +"%F %T")" >> $GITHUB_ENV
-          echo "FILE_DATE=$(date +"%Y%m%d")" >> $GITHUB_ENV
+    - name: 📦 Plugin List
+      if: steps.compile.outputs.status == 'success'
+      run: |
+        cd openwrt
+        echo "PLUGIN_BODY<<EOF" >> $GITHUB_ENV
+        echo "### 📦 插件列表：" >> $GITHUB_ENV
+        grep "CONFIG_PACKAGE_luci-app-" .config | grep "=y" | cut -d'=' -f1 | sed 's/CONFIG_PACKAGE_//g' >> $GITHUB_ENV
+        echo "EOF" >> $GITHUB_ENV
 
-      # =========================
-      # 整理固件
-      # =========================
-      - name: Organize
-        if: steps.compile.outputs.status == 'success'
-        run: |
-          cd openwrt/bin/targets/*/*
-          rm -rf packages
+    - name: 🚀 Release
+      uses: softprops/action-gh-release@v2
+      if: steps.compile.outputs.status == 'success'
+      with:
+        tag_name: ${{env.TARGET}}_${{env.FILE_DATE}}
+        files: ${{ env.FIRMWARE }}/*
+        body: |
+          🌐 默认地址：192.168.1.1
+          🔑 默认密码：无
 
-          TIMESTAMP=$(date +"%y.%m.%d-%H.%M")
+          ⚙️ 平台：${{env.TARGET}}
+          📦 源码：${{env.REPO_URL}}
+          🌿 分支：${{env.REPO_BRANCH}}
+          🧬 提交：${{env.WRT_HASH}}
+          🕒 时间：${{env.DATE}}
 
-          for f in *; do
-            [ -f "$f" ] && mv "$f" "${f%.*}-${TIMESTAMP}.${f##*.}"
-          done
-
-          echo "FIRMWARE=$PWD" >> $GITHUB_ENV
-
-      # =========================
-      # 插件列表
-      # =========================
-      - name: Generate Plugin List
-        if: steps.compile.outputs.status == 'success'
-        run: |
-          cd openwrt
-          echo "PLUGIN_BODY<<EOF" >> $GITHUB_ENV
-          echo "### 📦 已集成插件：" >> $GITHUB_ENV
-          grep "CONFIG_PACKAGE_luci-app-" .config | grep "=y" | cut -d'=' -f1 | sed 's/CONFIG_PACKAGE_//g' >> $GITHUB_ENV
-          echo "EOF" >> $GITHUB_ENV
-
-      # =========================
-      # 发布
-      # =========================
-      - name: Release Firmware
-        uses: softprops/action-gh-release@v2
-        if: steps.compile.outputs.status == 'success'
-        with:
-          tag_name: ${{ env.TARGET }}_${{ env.FILE_DATE }}
-          files: ${{ env.FIRMWARE }}/*
-          body: |
-            🌐 **设备信息**
-            - 地址：192.168.1.1
-            - 用户名：root
-            - 密码：空
-
-            ⚙️ **编译信息**
-            - 平台：${{ env.TARGET }}
-            - 源码：${{ env.REPO_URL }}
-            - 分支：${{ env.REPO_BRANCH }}
-            - 提交：${{ env.WRT_HASH }}
-            - 时间：${{ env.DATE }}
-
-            ${{ env.PLUGIN_BODY }}
+          ${{env.PLUGIN_BODY}}

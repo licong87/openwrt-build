@@ -117,7 +117,12 @@ jobs:
         run: |
           [ -e "$CONFIG_FILE" ] && mv "$CONFIG_FILE" openwrt/.config
 
-          # 修复 sing-box 版本问题
+          # 【老哥的专属补丁】：修复 libffi 编译时文件夹名字找不到的残脑 Bug
+          # 用 find 命令无死角找到 libffi 的 Makefile，强行把死板的架构名替换为通配符 *
+          find openwrt -path "*/libffi/Makefile" -exec sed -i 's/$(GNU_TARGET_NAME)\*/\*/g' {} +
+          find openwrt -path "*/libffi/Makefile" -exec sed -i 's/$(HOST_GNU_TARGET_NAME)\*/\*/g' {} +
+
+          # 修复 sing-box 版本问题 (保留 GPT 的原本逻辑)
           sed -i 's/PKG_VERSION:=.*/PKG_VERSION:=1.12.4/g' openwrt/feeds/packages/net/sing-box/Makefile || true
           sed -i 's/PKG_HASH:=.*/PKG_HASH:=skip/g' openwrt/feeds/packages/net/sing-box/Makefile || true
 

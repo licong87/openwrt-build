@@ -1,200 +1,184 @@
 name: WRT-CORE
 
 on:
-workflow_call:
-inputs:
-TARGET:
-required: true
-type: string
-REPO_SOURCE:
-required: true
-type: string
-REPO_URL:
-required: true
-type: string
-REPO_BRANCH:
-required: true
-type: string
-FEEDS_CONF:
-required: true
-type: string
-CONFIG_FILE:
-required: true
-type: string
+  workflow_call:
+    inputs:
+      TARGET:
+        required: true
+        type: string
+      REPO_SOURCE:
+        required: true
+        type: string
+      REPO_URL:
+        required: true
+        type: string
+      REPO_BRANCH:
+        required: true
+        type: string
+      FEEDS_CONF:
+        required: true
+        type: string
+      CONFIG_FILE:
+        required: true
+        type: string
 
 env:
-TARGET: ${{inputs.TARGET}}
-REPO_SOURCE: ${{inputs.REPO_SOURCE}}
-REPO_URL: ${{inputs.REPO_URL}}
-REPO_BRANCH: ${{inputs.REPO_BRANCH}}
-FEEDS_CONF: ${{inputs.FEEDS_CONF}}
-CONFIG_FILE: ${{inputs.CONFIG_FILE}}
-TZ: Asia/Shanghai
+  TARGET: ${{ inputs.TARGET }}
+  REPO_SOURCE: ${{ inputs.REPO_SOURCE }}
+  REPO_URL: ${{ inputs.REPO_URL }}
+  REPO_BRANCH: ${{ inputs.REPO_BRANCH }}
+  FEEDS_CONF: ${{ inputs.FEEDS_CONF }}
+  CONFIG_FILE: ${{ inputs.CONFIG_FILE }}
+  TZ: Asia/Shanghai
 
 jobs:
-build:
-runs-on: ubuntu-22.04
+  build:
+    runs-on: ubuntu-22.04
 
-steps:
+    steps:
+      - name: Free Disk Space
+        uses: jlumbroso/free-disk-space@main
+        with:
+          tool-cache: true
+          android: true
+          dotnet: true
+          haskell: true
+          large-packages: true
+          swap-storage: true
 
-  - name: Free Disk Space
-    uses: jlumbroso/free-disk-space@main
+      - name: Checkout
+        uses: actions/checkout@v3
 
-  - name: Checkout
-    uses: actions/checkout@v3
+      # =========================
+      # ✅ 环境初始化（稳定版）
+      # =========================
+      - name: Init Environment
+        run: |
+          sudo rm -rf /etc/apt/sources.list.d/* /usr/share/dotnet /usr/local/lib/android /opt/ghc
 
-  # =========================
-  # ✅ 环境初始化（稳定版）
-  # =========================
-  - name: Init Environment
-    run: |
-      sudo rm -rf /etc/apt/sources.list.d/* /usr/share/dotnet /usr/local/lib/android /opt/ghc
-      sudo apt-get update
-      
-      # ❌ 禁止 full-upgrade（会炸环境）
-      # sudo apt-get full-upgrade -y
-      
-      sudo apt-get install -y \
-        build-essential clang flex bison g++ gawk gcc-multilib gettext \
-        git libncurses5-dev libssl-dev python3-distutils rsync unzip zlib1g-dev \
-        file wget curl libelf-dev autoconf automake libtool pkg-config
+          sudo apt-get update -y
+          sudo apt-get upgrade -y
 
-      sudo timedatectl set-timezone "$TZ"
+          sudo apt-get install -y \
+            build-essential clang flex bison g++ gawk \
+            gcc-multilib g++-multilib gettext git libncurses-dev \
+            libssl-dev python3-distutils rsync unzip zlib1g-dev \
+            file wget curl cmake ninja-build pkg-config \
+            libffi-dev libtool autoconf automake texinfo dos2unix
 
-      git config --global user.email "ci@openwrt"
-      git config --global user.name "OpenWrt-CI"
+          sudo timedatectl set-timezone "$TZ"
 
-      sudo mkdir -p /workdir
-      sudo chown $USER:$GROUPS /workdir
+          git config --global user.email "actions@github.com"
+          git config --global user.name "GitHub Actions"
 
-  # =========================
-  # ✅ 拉源码
-  # =========================
-  - name: Clone Source
-    working-directory: /workdir
-    run: |
-      git clone --depth=1 $REPO_URL -b $REPO_BRANCH openwrt
-      ln -sf /workdir/openwrt $GITHUB_WORKSPACE/openwrt
-      cd openwrt
-      echo "WRT_HASH=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
-      echo "OPENWRT_PATH=$PWD" >> $GITHUB_ENV
+          mkdir -p /workdir
+          sudo chown $USER:$USER /workdir
 
-  # =========================
-  # ✅ 缓存（加速）
-  # =========================
-  - name: Cache
-    uses: stupidloud/cachewrtbuild@main
-    with:
-      ccache: true
-      mixkey: ${{env.REPO_SOURCE}}-${{env.REPO_BRANCH}}-${{env.WRT_HASH}}
-      prefix: ${{ env.OPENWRT_PATH }}
+      # =========================
+      # 拉源码
+      # =========================
+      - name: Clone Source
+        working-directory: /workdir
+        run: |
+          git clone --depth=1 $REPO_URL -b $REPO_BRANCH openwrt
+          ln -sf /workdir/openwrt $GITHUB_WORKSPACE/openwrt
 
-  # =========================
-  # ✅ feeds
-  # =========================
-  - name: Update Feeds
-    run: |
-      cd openwrt
-      ./scripts/feeds update -a
-      ./scripts/feeds install -a
+          cd openwrt
+          echo "WRT_HASH=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
+          echo "OPENWRT_PATH=$PWD" >> $GITHUB_ENV
 
-  # =========================
-  # ✅ 自定义配置
-  # =========================
-  - name: Custom Settings
-    run: |
-      [ -e $CONFIG_FILE ] && mv $CONFIG_FILE openwrt/.config
+      # =========================
+      # 缓存
+      # =========================
+      - name: Cache
+        uses: stupidloud/cachewrtbuild@main
+        with:
+          ccache: true
+          mixkey: ${{ env.REPO_SOURCE }}-${{ env.REPO_BRANCH }}-${{ env.WRT_HASH }}
+          prefix: ${{ env.OPENWRT_PATH }}
 
-      # 固定 sing-box（避免版本炸）
-      sed -i 's/PKG_VERSION:=.*/PKG_VERSION:=1.12.4/g' openwrt/feeds/packages/net/sing-box/Makefile || true
-      sed -i 's/PKG_HASH:=.*/PKG_HASH:=skip/g' openwrt/feeds/packages/net/sing-box/Makefile || true
+      # =========================
+      # Feeds
+      # =========================
+      - name: Update Feeds
+        run: |
+          cd openwrt
+          ./scripts/feeds update -a
+          ./scripts/feeds install -a
 
-      cd openwrt
-      bash $GITHUB_WORKSPACE/scripts/Settings.sh || true
+      # =========================
+      # 自定义
+      # =========================
+      - name: Custom Settings
+        run: |
+          [ -e "$CONFIG_FILE" ] && mv "$CONFIG_FILE" openwrt/.config
 
-  # =========================
-  # ✅ 自定义包
-  # =========================
-  - name: Custom Packages
-    run: |
-      cd openwrt/package/
-      bash $GITHUB_WORKSPACE/scripts/Packages.sh || true
-      bash $GITHUB_WORKSPACE/scripts/Handles.sh || true
+          # 🔧 sing-box 修复（防炸）
+          sed -i 's/PKG_VERSION:=.*/PKG_VERSION:=1.12.4/g' openwrt/feeds/packages/net/sing-box/Makefile || true
+          sed -i 's/PKG_HASH:=.*/PKG_HASH:=skip/g' openwrt/feeds/packages/net/sing-box/Makefile || true
 
-  # =========================
-  # ✅ 下载依赖
-  # =========================
-  - name: Download
-    run: |
-      cd openwrt
-      make defconfig
-      make download -j8
-      find dl -size -1024c -delete
+          dos2unix $GITHUB_WORKSPACE/scripts/*.sh || true
 
-  # =========================
-  # 🔥 核心修复：libffi
-  # =========================
-  - name: Fix libffi (100%稳定)
-    run: |
-      cd openwrt
-      echo ">>> Fixing libffi fficonfig.h path"
-      
-      find build_dir -name fficonfig.h | while read file; do
-        dir=$(dirname "$file")
-        cp "$file" "$dir/../fficonfig.h" 2>/dev/null || true
-      done
+          cd openwrt
+          [ -f "$GITHUB_WORKSPACE/scripts/Settings.sh" ] && bash $GITHUB_WORKSPACE/scripts/Settings.sh
 
-  # =========================
-  # 🚀 编译
-  # =========================
-  - name: Compile
-    id: compile
-    run: |
-      cd openwrt
-      echo "Using $(nproc) threads"
-      
-      make -j$(nproc) || make -j1 V=s
+      # =========================
+      # 自定义包
+      # =========================
+      - name: Custom Packages
+        run: |
+          cd openwrt/package
+          [ -f "$GITHUB_WORKSPACE/scripts/Packages.sh" ] && bash $GITHUB_WORKSPACE/scripts/Packages.sh
+          [ -f "$GITHUB_WORKSPACE/scripts/Handles.sh" ] && bash $GITHUB_WORKSPACE/scripts/Handles.sh
 
-      echo "status=success" >> $GITHUB_OUTPUT
-      echo "DATE=$(date +"%Y-%m-%d %H:%M:%S")" >> $GITHUB_ENV
-      echo "FILE_DATE=$(date +"%Y.%m.%d")" >> $GITHUB_ENV
+      # =========================
+      # 下载
+      # =========================
+      - name: Download
+        run: |
+          cd openwrt
+          make defconfig
+          make download -j8
 
-  # =========================
-  # 📦 整理固件
-  # =========================
-  - name: Organize
-    if: steps.compile.outputs.status == 'success'
-    run: |
-      cd openwrt/bin/targets/*/*
-      rm -rf packages
+          find dl -size -1024c -exec rm -f {} \;
 
-      TIMESTAMP=$(date +"%y.%m.%d-%H.%M.%S")
+      # =========================
+      # 编译（稳定版）
+      # =========================
+      - name: Compile
+        run: |
+          cd openwrt
 
-      for file in *; do
-        [ -f "$file" ] || continue
-        base="${file%%.*}"
-        ext="${file#*.}"
-        
-        if [ "$base" == "$file" ]; then
-          mv "$file" "${file}-${TIMESTAMP}"
-        else
-          mv "$file" "${base}-${TIMESTAMP}.${ext}"
-        fi
-      done
+          echo "==> Start compiling..."
+          make -j$(nproc) || make -j1 V=s
 
-      echo "FIRMWARE=$PWD" >> $GITHUB_ENV
+          echo "status=success" >> $GITHUB_OUTPUT
+          echo "DATE=$(date +"%F %T")" >> $GITHUB_ENV
+          echo "FILE_DATE=$(date +"%Y%m%d")" >> $GITHUB_ENV
 
-  # =========================
-  # 🚀 发布
-  # =========================
-  - name: Release
-    uses: softprops/action-gh-release@v2
-    if: steps.compile.outputs.status == 'success'
-    with:
-      tag_name: ${{env.TARGET}}_${{env.FILE_DATE}}
-      files: ${{ env.FIRMWARE }}/*
-      body: |
-        编译时间：${{env.DATE}}
-        源码：${{env.REPO_URL}}
-        分支：${{env.REPO_BRANCH}}
-        提交：${{env.WRT_HASH}}
+      # =========================
+      # 整理固件
+      # =========================
+      - name: Organize
+        if: success()
+        run: |
+          cd openwrt/bin/targets/*/*
+          rm -rf packages
+
+          TIMESTAMP=$(date +"%y.%m.%d-%H.%M")
+
+          for f in *; do
+            [ -f "$f" ] && mv "$f" "${f%.*}-${TIMESTAMP}.${f##*.}"
+          done
+
+          echo "FIRMWARE=$PWD" >> $GITHUB_ENV
+
+      # =========================
+      # 发布
+      # =========================
+      - name: Release
+        uses: softprops/action-gh-release@v2
+        if: success()
+        with:
+          tag_name: ${{ env.TARGET }}_${{ env.FILE_DATE }}
+          files: ${{ env.FIRMWARE }}/*

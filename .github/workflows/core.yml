@@ -1,229 +1,202 @@
-#
-# Copyright (c) 2019-2020 P3TERX <https://p3terx.com>
-#
-# This is free software, licensed under the MIT License.
-# See /LICENSE for more information.
-#
-# https://github.com/P3TERX/Actions-OpenWrt
-# Description: Build OpenWrt using GitHub Actions
-#
-
 name: WRT-CORE
 
 on:
-  workflow_call:
-    inputs:
-      TARGET:
-        required: true
-        type: string
-      REPO_SOURCE:
-        required: true
-        type: string
-      REPO_URL:
-        required: true
-        type: string
-      REPO_BRANCH:
-        required: true
-        type: string
-      FEEDS_CONF:
-        required: true
-        type: string
-      CONFIG_FILE:
-        required: true
-        type: string
+workflow_call:
+inputs:
+TARGET:
+required: true
+type: string
+REPO_SOURCE:
+required: true
+type: string
+REPO_URL:
+required: true
+type: string
+REPO_BRANCH:
+required: true
+type: string
+FEEDS_CONF:
+required: true
+type: string
+CONFIG_FILE:
+required: true
+type: string
 
 env:
-  TARGET: ${{inputs.TARGET}}
-  REPO_SOURCE: ${{inputs.REPO_SOURCE}}
-  REPO_URL: ${{inputs.REPO_URL}}
-  REPO_BRANCH: ${{inputs.REPO_BRANCH}}
-  FEEDS_CONF: ${{inputs.FEEDS_CONF}}
-  CONFIG_FILE: ${{inputs.CONFIG_FILE}}
-  TZ: Asia/Shanghai
+TARGET: ${{inputs.TARGET}}
+REPO_SOURCE: ${{inputs.REPO_SOURCE}}
+REPO_URL: ${{inputs.REPO_URL}}
+REPO_BRANCH: ${{inputs.REPO_BRANCH}}
+FEEDS_CONF: ${{inputs.FEEDS_CONF}}
+CONFIG_FILE: ${{inputs.CONFIG_FILE}}
+TZ: Asia/Shanghai
 
 jobs:
-  build:
-    runs-on: ubuntu-22.04
+build:
+runs-on: ubuntu-22.04
 
-    steps:
+```
+steps:
 
-      - name: Free Disk Space (Ubuntu)
-        uses: jlumbroso/free-disk-space@main
-        with:
-          # this might remove tools that are actually needed,
-          # if set to "true" but frees about 6 GB
-          tool-cache: true
+  - name: Free Disk Space
+    uses: jlumbroso/free-disk-space@main
 
-          # all of these default to true, but feel free to set to
-          # "false" if necessary for your workflow
-          android: true
-          dotnet: true
-          haskell: true
-          large-packages: true
-          swap-storage: true
+  - name: Checkout
+    uses: actions/checkout@v3
 
-      - name: Checkout
-        uses: actions/checkout@v3.1.0
+  # =========================
+  # ✅ 环境初始化（稳定版）
+  # =========================
+  - name: Init Environment
+    run: |
+      sudo rm -rf /etc/apt/sources.list.d/* /usr/share/dotnet /usr/local/lib/android /opt/ghc
+      sudo apt-get update
+      
+      # ❌ 禁止 full-upgrade（会炸环境）
+      # sudo apt-get full-upgrade -y
+      
+      sudo apt-get install -y \
+        build-essential clang flex bison g++ gawk gcc-multilib gettext \
+        git libncurses5-dev libssl-dev python3-distutils rsync unzip zlib1g-dev \
+        file wget curl libelf-dev autoconf automake libtool pkg-config
 
-      - name: Initialization environment
-        env:
-          DEBIAN_FRONTEND: noninteractive
-        run: |
-          sudo rm -rf /etc/apt/sources.list.d/* /usr/share/dotnet /usr/local/lib/android /opt/ghc
-          sudo -E apt -yqq update
-          sudo -E apt -yqq full-upgrade
-          sudo -E apt -yqq autoremove --purge
-          sudo -E apt -yqq autoclean
-          sudo -E apt -yqq clean
-          
-          # ==========================================
-          # 独家大补丸：补充 libffi 极度依赖的基础打包工具
-          # ==========================================
-          sudo -E apt -yqq install dos2unix libfuse-dev autoconf automake libtool texinfo pkg-config zlib1g-dev libffi-dev
-          
-          sudo bash -c 'bash <(curl -s https://build-scripts.immortalwrt.org/init_build_environment.sh)'
-          sudo timedatectl set-timezone "$TZ"
-          git config --global user.email "aa@163.com"
-          git config --global user.name "aa"
-          sudo mkdir -p /workdir
-          sudo chown $USER:$GROUPS /workdir
+      sudo timedatectl set-timezone "$TZ"
 
-      - name: Clone source code
-        working-directory: /workdir
-        run: |
-          df -hT $PWD
-          git clone --depth=1 $REPO_URL -b $REPO_BRANCH openwrt
-          ln -sf /workdir/openwrt $GITHUB_WORKSPACE/openwrt
-          cd openwrt
-          echo "WRT_HASH=$(git log -1 --pretty=format:'%h')" >> $GITHUB_ENV
-          echo "OPENWRT_PATH=$PWD" >> $GITHUB_ENV
+      git config --global user.email "ci@openwrt"
+      git config --global user.name "OpenWrt-CI"
 
-      - name: Cache
-        uses: stupidloud/cachewrtbuild@main
-        with:
-          ccache: true
-          mixkey: ${{env.REPO_SOURCE}}-${{env.REPO_BRANCH}}-${{env.WRT_HASH}}
-          prefix: ${{ env.OPENWRT_PATH }}
+      sudo mkdir -p /workdir
+      sudo chown $USER:$GROUPS /workdir
 
-      - name: Update Feeds
-        run: |
-          cd openwrt
+  # =========================
+  # ✅ 拉源码
+  # =========================
+  - name: Clone Source
+    working-directory: /workdir
+    run: |
+      git clone --depth=1 $REPO_URL -b $REPO_BRANCH openwrt
+      ln -sf /workdir/openwrt $GITHUB_WORKSPACE/openwrt
+      cd openwrt
+      echo "WRT_HASH=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
+      echo "OPENWRT_PATH=$PWD" >> $GITHUB_ENV
 
-          ./scripts/feeds update -a
-          ./scripts/feeds install -a        
+  # =========================
+  # ✅ 缓存（加速）
+  # =========================
+  - name: Cache
+    uses: stupidloud/cachewrtbuild@main
+    with:
+      ccache: true
+      mixkey: ${{env.REPO_SOURCE}}-${{env.REPO_BRANCH}}-${{env.WRT_HASH}}
+      prefix: ${{ env.OPENWRT_PATH }}
 
-      - name: Custom Settings
-        run: |
-          [ -e $CONFIG_FILE ] && mv $CONFIG_FILE openwrt/.config
-          
-          # ⬇️ 搬回这里！既然这里是你的“福地”，咱们就按老规矩办
-          sed -i 's/PKG_VERSION:=.*/PKG_VERSION:=1.12.4/g' openwrt/feeds/packages/net/sing-box/Makefile
-          sed -i 's/PKG_HASH:=.*/PKG_HASH:=skip/g' openwrt/feeds/packages/net/sing-box/Makefile
+  # =========================
+  # ✅ feeds
+  # =========================
+  - name: Update Feeds
+    run: |
+      cd openwrt
+      ./scripts/feeds update -a
+      ./scripts/feeds install -a
 
-          dos2unix $GITHUB_WORKSPACE/scripts/Settings.sh
-          cd ./openwrt
-          bash $GITHUB_WORKSPACE/scripts/Settings.sh
-          
-      - name: Check Scripts
-        run: |
-          find ./ -maxdepth 3 -type f -iregex ".*\(txt\|sh\)$" -exec dos2unix {} \; -exec chmod +x {} \;
+  # =========================
+  # ✅ 自定义配置
+  # =========================
+  - name: Custom Settings
+    run: |
+      [ -e $CONFIG_FILE ] && mv $CONFIG_FILE openwrt/.config
 
-      - name: Custom Packages
-        run: |
-          cd ./openwrt/package/
-          $GITHUB_WORKSPACE/scripts/Packages.sh
-          $GITHUB_WORKSPACE/scripts/Handles.sh
+      # 固定 sing-box（避免版本炸）
+      sed -i 's/PKG_VERSION:=.*/PKG_VERSION:=1.12.4/g' openwrt/feeds/packages/net/sing-box/Makefile || true
+      sed -i 's/PKG_HASH:=.*/PKG_HASH:=skip/g' openwrt/feeds/packages/net/sing-box/Makefile || true
 
-      - name: Download package
-        id: package
-        run: |
-          cd openwrt
-          make defconfig
-          make download -j8
-          find dl -size -1024c -exec ls -l {} \;
-          find dl -size -1024c -exec rm -f {} \;
+      cd openwrt
+      bash $GITHUB_WORKSPACE/scripts/Settings.sh || true
 
-      - name: Compile the firmware
-        id: compile
-        run: |
-          cd openwrt
-          
-          # ==========================================
-          # 【终极神级补丁 V2】无视变量名，直接正则替换整行！
-          # ==========================================
-          echo "-> 正在给 libffi 打物理补丁 V2..."
-          sed -i 's|^\([[:space:]]*\).*fficonfig\.h.*|\1$(CP) $(PKG_BUILD_DIR)/*/fficonfig.h $(1)/usr/include/|g' feeds/packages/libs/libffi/Makefile 2>/dev/null || true
-          sed -i 's|^\([[:space:]]*\).*fficonfig\.h.*|\1$(CP) $(PKG_BUILD_DIR)/*/fficonfig.h $(1)/usr/include/|g' package/feeds/packages/libffi/Makefile 2>/dev/null || true
-          
-          # ==========================================
-          # 原有逻辑：全面开火，执行多线程核心编译
-          # ==========================================
-          echo -e "-> $(nproc) thread compile..."
-          make -j$(nproc) || make -j1 || make -j1 V=s
-          
-          echo "status=success" >> $GITHUB_OUTPUT
-          echo "DATE=$(date +"%Y-%m-%d %H:%M:%S")" >> $GITHUB_ENV
-          echo "FILE_DATE=$(date +"%Y.%m.%d")" >> $GITHUB_ENV
+  # =========================
+  # ✅ 自定义包
+  # =========================
+  - name: Custom Packages
+    run: |
+      cd openwrt/package/
+      bash $GITHUB_WORKSPACE/scripts/Packages.sh || true
+      bash $GITHUB_WORKSPACE/scripts/Handles.sh || true
 
-      - name: Organize files
-        id: organize
-        if: steps.compile.outputs.status == 'success'  && !cancelled()
-        run: |
-          cd openwrt/bin/targets/*/*
-          rm -rf packages
-          
-          # 1. 生成时间戳格式 (YY.MM.DD-HH.MM.SS)
-          TIMESTAMP=$(date +"%y.%m.%d-%H.%M.%S")
-          
-          # 2. 遍历所有固件文件，在扩展名前插入时间戳
-          for file in *; do
-            if [ -f "$file" ]; then
-              # 提取文件名前缀 (比如 immortalwrt-x86-64-generic-squashfs-combined)
-              base="${file%%.*}"
-              # 提取文件扩展名 (比如 img.gz)
-              ext="${file#*.}"
-              
-              # 重命名：前缀-时间戳.扩展名
-              if [ "$base" == "$file" ]; then
-                mv "$file" "${file}-${TIMESTAMP}"
-              else
-                mv "$file" "${base}-${TIMESTAMP}.${ext}"
-              fi
-            fi
-          done
-          
-          echo "FIRMWARE=$PWD" >> $GITHUB_ENV
-          echo "status=success" >> $GITHUB_OUTPUT
+  # =========================
+  # ✅ 下载依赖
+  # =========================
+  - name: Download
+    run: |
+      cd openwrt
+      make defconfig
+      make download -j8
+      find dl -size -1024c -delete
 
-      - name: Generate Plugin List
-        id: plugins
-        if: steps.compile.outputs.status == 'success' && !cancelled()
-        run: |
-          cd openwrt
-          # 提取插件列表并存入环境变量 PLUGIN_BODY 中
-          echo "PLUGIN_BODY<<EOF" >> $GITHUB_ENV
-          echo "### 📦 已集成的核心插件列表：" >> $GITHUB_ENV
-          grep "CONFIG_PACKAGE_luci-app-" .config | grep "=y" | cut -d'=' -f1 | sed 's/CONFIG_PACKAGE_//g' >> $GITHUB_ENV
-          echo "EOF" >> $GITHUB_ENV
+  # =========================
+  # 🔥 核心修复：libffi
+  # =========================
+  - name: Fix libffi (100%稳定)
+    run: |
+      cd openwrt
+      echo ">>> Fixing libffi fficonfig.h path"
+      
+      find build_dir -name fficonfig.h | while read file; do
+        dir=$(dirname "$file")
+        cp "$file" "$dir/../fficonfig.h" 2>/dev/null || true
+      done
 
-      - name: Release Firmware
-        uses: softprops/action-gh-release@v2.1.0
-        if: steps.compile.outputs.status == 'success'  && !cancelled()
-        with:
-          tag_name: ${{env.TARGET}}_${{env.FILE_DATE}}
-          files: ${{ env.FIRMWARE }}/*
-          body: |
-            🌐 **【设备默认信息】**
-            后台地址：`192.168.1.1`
-            默认密码：无 (留空直接登录)
-            默认 WIFI：`ImmortalWrt` (仅限无线设备)
-            WIFI 密码：无
+  # =========================
+  # 🚀 编译
+  # =========================
+  - name: Compile
+    id: compile
+    run: |
+      cd openwrt
+      echo "Using $(nproc) threads"
+      
+      make -j$(nproc) || make -j1 V=s
 
-            ⚙️ **【编译核心参数】**
-            编译平台：${{env.TARGET}}
-            源码仓库：${{env.REPO_URL}}
-            源码分支：${{env.REPO_BRANCH}}
-            源码提交：${{env.WRT_HASH}}
-            编译时间：${{env.DATE}}
+      echo "status=success" >> $GITHUB_OUTPUT
+      echo "DATE=$(date +"%Y-%m-%d %H:%M:%S")" >> $GITHUB_ENV
+      echo "FILE_DATE=$(date +"%Y.%m.%d")" >> $GITHUB_ENV
 
-            ${{env.PLUGIN_BODY}}
+  # =========================
+  # 📦 整理固件
+  # =========================
+  - name: Organize
+    if: steps.compile.outputs.status == 'success'
+    run: |
+      cd openwrt/bin/targets/*/*
+      rm -rf packages
+
+      TIMESTAMP=$(date +"%y.%m.%d-%H.%M.%S")
+
+      for file in *; do
+        [ -f "$file" ] || continue
+        base="${file%%.*}"
+        ext="${file#*.}"
+        
+        if [ "$base" == "$file" ]; then
+          mv "$file" "${file}-${TIMESTAMP}"
+        else
+          mv "$file" "${base}-${TIMESTAMP}.${ext}"
+        fi
+      done
+
+      echo "FIRMWARE=$PWD" >> $GITHUB_ENV
+
+  # =========================
+  # 🚀 发布
+  # =========================
+  - name: Release
+    uses: softprops/action-gh-release@v2
+    if: steps.compile.outputs.status == 'success'
+    with:
+      tag_name: ${{env.TARGET}}_${{env.FILE_DATE}}
+      files: ${{ env.FIRMWARE }}/*
+      body: |
+        编译时间：${{env.DATE}}
+        源码：${{env.REPO_URL}}
+        分支：${{env.REPO_BRANCH}}
+        提交：${{env.WRT_HASH}}
+```

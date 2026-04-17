@@ -20,11 +20,10 @@ UPDATE_PACKAGE() {
 	fi
 }
 
-UPDATE_PACKAGE "aurora" "eamonxg/luci-theme-aurora" "master"
-UPDATE_PACKAGE "aurora-config" "eamonxg/luci-app-aurora-config" "master"
+UPDATE_PACKAGE "argon" "jerrykuku/luci-theme-argon" "master"
+UPDATE_PACKAGE "argon-config" "jerrykuku/luci-app-argon-config" "master"
 UPDATE_PACKAGE "kucat" "sirpdboy/luci-theme-kucat" "master"
 UPDATE_PACKAGE "kucat-config" "sirpdboy/luci-app-kucat-config" "master"
-UPDATE_PACKAGE "argon" "jerrykuku/luci-theme-argon" "master"
 # UPDATE_PACKAGE "momo" "nikkinikki-org/OpenWrt-momo" "main"
 UPDATE_PACKAGE "nikki" "nikkinikki-org/OpenWrt-nikki" "main"
 # UPDATE_PACKAGE "openclash" "vernesong/OpenClash" "dev" "pkg"

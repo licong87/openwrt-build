@@ -20,7 +20,7 @@ if [ -d "target/linux/qualcommax" ]; then
 fi
 
 # 4. 解除亚瑟内核封印：6M 变 12M (只有你要刷大分区版 U-Boot 才需要这个)
-#sed -i "s/KERNEL_SIZE := 6144k/KERNEL_SIZE := 12288k/g" target/linux/qualcommax/image/ipq60xx.mk
+# sed -i "s/KERNEL_SIZE := 6144k/KERNEL_SIZE := 12288k/g" target/linux/qualcommax/image/ipq60xx.mk
 
 # 5. 修改系统默认时区 (解决日志时间对不上的问题)
 sed -i "s/timezone='UTC'/timezone='CST-8'/g" package/base-files/files/bin/config_generate

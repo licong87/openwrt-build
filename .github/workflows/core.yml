@@ -23,12 +23,12 @@ required: true
 type: string
 
 env:
-TARGET: ${{inputs.TARGET}}
-REPO_SOURCE: ${{inputs.REPO_SOURCE}}
-REPO_URL: ${{inputs.REPO_URL}}
-REPO_BRANCH: ${{inputs.REPO_BRANCH}}
-FEEDS_CONF: ${{inputs.FEEDS_CONF}}
-CONFIG_FILE: ${{inputs.CONFIG_FILE}}
+TARGET: ${{ inputs.TARGET }}
+REPO_SOURCE: ${{ inputs.REPO_SOURCE }}
+REPO_URL: ${{ inputs.REPO_URL }}
+REPO_BRANCH: ${{ inputs.REPO_BRANCH }}
+FEEDS_CONF: ${{ inputs.FEEDS_CONF }}
+CONFIG_FILE: ${{ inputs.CONFIG_FILE }}
 TZ: Asia/Shanghai
 
 jobs:
@@ -36,7 +36,6 @@ build:
 runs-on: ubuntu-22.04
 
 steps:
-
   - name: Free Disk Space (Ubuntu)
     uses: jlumbroso/free-disk-space@main
     with:
@@ -50,24 +49,20 @@ steps:
   - name: Checkout
     uses: actions/checkout@v3.1.0
 
-  # 🔥 关键修复：稳定环境 + qemu-utils
   - name: Initialization environment
     env:
       DEBIAN_FRONTEND: noninteractive
     run: |
-      # ❌ 不再删 apt 源（防止环境损坏）
       sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc
 
       sudo -E apt -yqq update
 
-      # ✅ 完整依赖（含 qemu-utils）
       sudo -E apt -yqq install \
         build-essential clang flex bison g++ gawk gcc-multilib g++-multilib \
         gettext git libncurses5-dev libssl-dev python3 python3-distutils \
         rsync unzip zlib1g-dev file wget curl \
         qemu-utils dos2unix libfuse-dev
 
-      # ✅ 强制检测
       echo "==== 检查 qemu-img ===="
       which qemu-img || (echo "❌ qemu-img 未安装成功" && exit 1)
 
@@ -93,27 +88,26 @@ steps:
     uses: stupidloud/cachewrtbuild@main
     with:
       ccache: true
-      mixkey: ${{env.REPO_SOURCE}}-${{env.REPO_BRANCH}}-${{env.WRT_HASH}}
+      mixkey: ${{ env.REPO_SOURCE }}-${{ env.REPO_BRANCH }}-${{ env.WRT_HASH }}
       prefix: ${{ env.OPENWRT_PATH }}
 
   - name: Update Feeds
     run: |
       cd openwrt
       ./scripts/feeds update -a
-      ./scripts/feeds install -a        
+      ./scripts/feeds install -a
 
   - name: Custom Settings
     run: |
       [ -e $CONFIG_FILE ] && mv $CONFIG_FILE openwrt/.config
-      
-      # 保留你的 sing-box 修复
+
       sed -i 's/PKG_VERSION:=.*/PKG_VERSION:=1.12.4/g' openwrt/feeds/packages/net/sing-box/Makefile
       sed -i 's/PKG_HASH:=.*/PKG_HASH:=skip/g' openwrt/feeds/packages/net/sing-box/Makefile
 
       dos2unix $GITHUB_WORKSPACE/scripts/Settings.sh
       cd ./openwrt
       bash $GITHUB_WORKSPACE/scripts/Settings.sh
-      
+
   - name: Check Scripts
     run: |
       find ./ -maxdepth 3 -type f -iregex ".*\(txt\|sh\)$" -exec dos2unix {} \; -exec chmod +x {} \;
@@ -133,7 +127,6 @@ steps:
       find dl -size -1024c -exec ls -l {} \;
       find dl -size -1024c -exec rm -f {} \;
 
-  # 🚀 编译（增强稳定性）
   - name: Compile the firmware
     id: compile
     run: |
@@ -141,27 +134,26 @@ steps:
       echo -e "$(nproc) thread compile"
       make -j$(nproc) || make -j2 || make -j1 V=s
 
-      # 二次校验（防极端情况）
       which qemu-img || (echo "❌ 编译阶段 qemu-img 丢失" && exit 1)
 
       echo "status=success" >> $GITHUB_OUTPUT
       echo "DATE=$(date +"%Y-%m-%d %H:%M:%S")" >> $GITHUB_ENV
-      echo "FILE_DATE=$(date +"%Y.%m.%d")" >> $GITHUB_ENV          
+      echo "FILE_DATE=$(date +"%Y.%m.%d")" >> $GITHUB_ENV
 
   - name: Organize files
     id: organize
-    if: steps.compile.outputs.status == 'success'  && !cancelled()
+    if: steps.compile.outputs.status == 'success' && !cancelled()
     run: |
       cd openwrt/bin/targets/*/*
       rm -rf packages
-      
+
       TIMESTAMP=$(date +"%y.%m.%d-%H.%M.%S")
-      
+
       for file in *; do
         if [ -f "$file" ]; then
           base="${file%%.*}"
           ext="${file#*.}"
-          
+
           if [ "$base" == "$file" ]; then
             mv "$file" "${file}-${TIMESTAMP}"
           else
@@ -169,7 +161,7 @@ steps:
           fi
         fi
       done
-      
+
       echo "FIRMWARE=$PWD" >> $GITHUB_ENV
       echo "status=success" >> $GITHUB_OUTPUT
 
@@ -185,9 +177,9 @@ steps:
 
   - name: Release Firmware
     uses: softprops/action-gh-release@v2.1.0
-    if: steps.compile.outputs.status == 'success'  && !cancelled()
+    if: steps.compile.outputs.status == 'success' && !cancelled()
     with:
-      tag_name: ${{env.TARGET}}_${{env.FILE_DATE}}
+      tag_name: ${{ env.TARGET }}_${{ env.FILE_DATE }}
       files: ${{ env.FIRMWARE }}/*
       body: |
         🌐 **【设备默认信息】**
@@ -197,10 +189,11 @@ steps:
         WIFI 密码：无
 
         ⚙️ **【编译核心参数】**
-        编译平台：${{env.TARGET}}
-        源码仓库：${{env.REPO_URL}}
-        源码分支：${{env.REPO_BRANCH}}
-        源码提交：${{env.WRT_HASH}}
-        编译时间：${{env.DATE}}
+        编译平台：${{ env.TARGET }}
+        源码仓库：${{ env.REPO_URL }}
+        源码分支：${{ env.REPO_BRANCH }}
+        源码提交：${{ env.WRT_HASH }}
+        编译时间：${{ env.DATE }}
 
-        ${{env.PLUGIN_BODY}}
+        ${{ env.PLUGIN_BODY }}
+```

@@ -146,11 +146,11 @@ jobs:
         id: plugins
         if: steps.compile.outputs.status == 'success' && !cancelled()
         run: |
-         cd openwrt
-         echo "PLUGIN_BODY<<EOF" >> $GITHUB_ENV
-         echo "### 📦 已集成的核心插件列表：" >> $GITHUB_ENV
-         grep "CONFIG_PACKAGE_luci-app-" .config | grep "=y" | cut -d'=' -f1 | sed 's/CONFIG_PACKAGE_//g' >> $GITHUB_ENV
-         echo "EOF" >> $GITHUB_ENV
+          cd openwrt
+          echo "PLUGIN_BODY<<EOF" >> $GITHUB_ENV
+          echo "### 📦 已集成的核心插件列表：" >> $GITHUB_ENV
+          grep "CONFIG_PACKAGE_luci-app-" .config | grep "=y" | cut -d'=' -f1 | sed 's/CONFIG_PACKAGE_//g' >> $GITHUB_ENV
+          echo "EOF" >> $GITHUB_ENV
 
       - name: Release Firmware
         uses: softprops/action-gh-release@v2.1.0

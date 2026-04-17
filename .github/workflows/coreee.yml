@@ -110,9 +110,13 @@ jobs:
       - name: Custom Settings
         run: |
           [ -e $CONFIG_FILE ] && mv $CONFIG_FILE openwrt/.config
+          
+          sed -i 's/PKG_VERSION:=.*/PKG_VERSION:=1.12.4/g' openwrt/feeds/packages/net/sing-box/Makefile
+          sed -i 's/PKG_HASH:=.*/PKG_HASH:=skip/g' openwrt/feeds/packages/net/sing-box/Makefile
+          
+          dos2unix $GITHUB_WORKSPACE/scripts/Settings.sh
           cd ./openwrt
-
-          $GITHUB_WORKSPACE/scripts/Settings.sh         
+          bash $GITHUB_WORKSPACE/scripts/Settings.sh        
 
       - name: Download package
         id: package

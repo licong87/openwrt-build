@@ -174,4 +174,4 @@ jobs:
 
             ${{ env.PLUGIN_BODY }}
  
-         ${{ env.PLUGIN_BODY }}
+            ${{ env.PLUGIN_BODY }}

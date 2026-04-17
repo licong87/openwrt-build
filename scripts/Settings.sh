@@ -31,36 +31,37 @@ echo "CONFIG_PACKAGE_zoneinfo-core=y" >> .config
 echo "CONFIG_PACKAGE_zoneinfo-asia=y" >> .config
 
 # =========================================================
-# 注入全网最全的规则库 (适配 dae & Nikki 开机即用)
+# 注入全网最全规则库 (适配 dae & Nikki)
 # =========================================================
 
-echo "🚀 开始下载满血版规则库，打造零等待固件..."
+echo "🚀 开始下载满血规则库， dae 与 Nikki 互不干扰，开机即用！"
 
 # ---------------------------------------------------------
-# 1. 准备 dae 的规则目录 (V2Ray 标准路径，全小写)
+# 1. 准备 dae 的规则目录 (使用 Loyalsoldier 满血版)
 # ---------------------------------------------------------
 mkdir -p files/usr/share/v2ray
-echo "-> 下载 Loyalsoldier 满血规则库..."
-curl -L -o files/usr/share/v2ray/geosite.dat https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geosite.dat
-curl -L -o files/usr/share/v2ray/geoip.dat https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geoip.dat
+echo "-> 下载 dae 专用的 Loyalsoldier 规则 (全小写)..."
+# 使用镜像加速，确保编译不超时
+curl -L -o files/usr/share/v2ray/geosite.dat https://fastly.jsdelivr.net/gh/Loyalsoldier/v2ray-rules-dat@release/geosite.dat
+curl -L -o files/usr/share/v2ray/geoip.dat https://fastly.jsdelivr.net/gh/Loyalsoldier/v2ray-rules-dat@release/geoip.dat
+
 
 # ---------------------------------------------------------
-# 2. 准备 Nikki (Mihomo) 的规则目录 (精准修正为 run 子目录)
+# 2. 准备 Nikki (Mihomo) 的规则目录 (使用 MetaCubeX 源)
 # ---------------------------------------------------------
 mkdir -p files/etc/nikki/run
+echo "-> 下载 Nikki 专用的 MetaCubeX 规则 (强制首字母大写 + MMDB 支持)..."
 
-echo "-> 将 Loyalsoldier 规则“白嫖”给 Nikki 使用 (严格修正大小写)..."
-# 直接复制刚才下好的文件，瞬间完成，省去二次下载的时间！
-cp files/usr/share/v2ray/geosite.dat files/etc/nikki/run/GeoSite.dat
-cp files/usr/share/v2ray/geoip.dat files/etc/nikki/run/GeoIP.dat
+# 下载 dat 格式 (为了适配包含 apple/telegram 标签的需求，必须用 MetaCubeX 的源)
+curl -L -o files/etc/nikki/run/GeoSite.dat https://fastly.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@release/geosite.dat
+curl -L -o files/etc/nikki/run/GeoIP.dat https://fastly.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@release/geoip.dat
 
-echo "-> 下载 Nikki 专属的 mmdb 基础数据库..."
-# 这三个底层的库 Loyalsoldier 没有，还得老老实实去 MetaCubeX 官方下
-curl -L -o files/etc/nikki/run/ASN.mmdb https://github.com/MetaCubeX/meta-rules-dat/releases/latest/download/GeoLite2-ASN.mmdb
-curl -L -o files/etc/nikki/run/Country.mmdb https://github.com/MetaCubeX/meta-rules-dat/releases/latest/download/country.mmdb
-curl -L -o files/etc/nikki/run/geoip.metadb https://github.com/MetaCubeX/meta-rules-dat/releases/latest/download/geoip.metadb
+# 下载 Nikki 核心强依赖的 MMDB 格式
+curl -L -o files/etc/nikki/run/ASN.mmdb https://fastly.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@release/GeoLite2-ASN.mmdb
+curl -L -o files/etc/nikki/run/Country.mmdb https://fastly.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@release/country.mmdb
+curl -L -o files/etc/nikki/run/geoip.metadb https://fastly.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@release/geoip.metadb
 
-echo "✅ 规则库预装完成！"
+echo "✅ 固件规则库预装完成！"
 
 # 7. 强行注入 factory.ubi 生成规则 (注意：这里我用了标准的转义，确保格式正确)
 # 强行注入 factory.ubi 生成规则，并补齐闪存物理参数

@@ -173,5 +173,4 @@ jobs:
             编译时间：${{ env.DATE }}
 
             ${{ env.PLUGIN_BODY }}
- 
-            ${{ env.PLUGIN_BODY }}
+

@@ -94,7 +94,7 @@ jobs:
         run: |
           cd openwrt
 
-          ./scripts/feeds update -a
+          ./scripts/feeds update -i
           ./scripts/feeds install -a        
 
       - name: Check Scripts

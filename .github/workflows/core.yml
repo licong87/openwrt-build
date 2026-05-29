@@ -113,6 +113,9 @@ jobs:
           
           sed -i 's/PKG_VERSION:=.*/PKG_VERSION:=1.12.4/g' openwrt/feeds/packages/net/sing-box/Makefile
           sed -i 's/PKG_HASH:=.*/PKG_HASH:=skip/g' openwrt/feeds/packages/net/sing-box/Makefile
+
+          # 修复 nikki 编译时尝试拷贝不存在的 Go 源码而报错的问题
+          sed -i '$a\define Build/InstallDev\nendef' $(find openwrt/ -name "Makefile" | grep "nikki/Makefile")
           
           dos2unix $GITHUB_WORKSPACE/scripts/Settings.sh
           cd ./openwrt

@@ -130,6 +130,17 @@ jobs:
           find dl -size -1024c -exec ls -l {} \;
           find dl -size -1024c -exec rm -f {} \;
 
+      # 👇 新增下面这个专门用来单线程预编译的 Step 👇
+      - name: Pre-compile fragile packages
+        run: |
+          cd openwrt
+          echo "Cleaning corrupted libffi..."
+          make package/feeds/packages/libffi/clean
+          
+          echo "Pre-compiling libffi with single thread..."
+          make package/feeds/packages/libffi/compile -j1 V=s
+      # 👆 新增结束 👆
+
       - name: Compile the firmware
         id: compile
         run: |

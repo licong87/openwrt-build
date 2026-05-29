@@ -117,9 +117,11 @@ jobs:
           # 修复 nikki 编译时尝试拷贝不存在的 Go 源码而报错的问题
           sed -i '/eval.*BuildPackage/i define Build/InstallDev\nendef\n' openwrt/package/OpenWrt-nikki/nikki/Makefile
           
-          # 👇 修复 libffi fficonfig.h 路径错误 👇 
-          sed -i 's#$(PKG_BUILD_DIR)/$(GNU_TARGET_NAME)\*/fficonfig.h#$(PKG_BUILD_DIR)/*/fficonfig.h#g' \ openwrt/feeds/packages/libs/libffi/Makefile # 👆 修复结束 👆
-
+          # 👇 修复 libffi fficonfig.h 路径错误 👇
+          sed -i 's#$(PKG_BUILD_DIR)/$(GNU_TARGET_NAME)\*/fficonfig.h#$(PKG_BUILD_DIR)/*/fficonfig.h#g' \
+          openwrt/feeds/packages/libs/libffi/Makefile
+          # 👆 修复结束 👆
+          
           dos2unix $GITHUB_WORKSPACE/scripts/Settings.sh
           cd ./openwrt
           bash $GITHUB_WORKSPACE/scripts/Settings.sh   

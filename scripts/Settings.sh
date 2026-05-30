@@ -47,7 +47,7 @@ curl -L -o files/usr/share/v2ray/geoip.dat https://fastly.jsdelivr.net/gh/Loyals
 
 
 # ---------------------------------------------------------
-# 2. 准备 Nikki (Mihomo) 的规则目录 (使用 MetaCubeX 源)
+# 8. 准备 Nikki (Mihomo) 的规则目录 (使用 MetaCubeX 源)
 # ---------------------------------------------------------
 mkdir -p files/etc/nikki/run
 echo "-> 下载 Nikki 专用的 MetaCubeX 规则 (强制首字母大写 + MMDB 支持)..."

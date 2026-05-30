@@ -63,3 +63,17 @@ curl -L -o files/etc/nikki/run/geoip.metadb https://fastly.jsdelivr.net/gh/MetaC
 
 echo "✅ 固件规则库预装完成！"
 
+# ---------------------------------------------------------
+# 8. 预装 Nikki Dashboard (Zashboard)
+# ---------------------------------------------------------
+echo "-> 下载 Nikki Dashboard..."
+
+mkdir -p files/etc/nikki/run/ui
+
+curl -L \
+-o /tmp/zashboard.zip \
+https://github.com/Zephyruso/zashboard/releases/latest/download/dist-cdn-fonts.zip
+
+unzip -oq /tmp/zashboard.zip -d files/etc/nikki/run/ui
+
+echo "✅ Nikki Dashboard 预装完成"

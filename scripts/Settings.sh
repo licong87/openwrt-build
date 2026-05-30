@@ -37,7 +37,7 @@ echo "CONFIG_PACKAGE_zoneinfo-asia=y" >> .config
 echo "🚀 开始下载满血规则库， dae 与 Nikki 互不干扰，开机即用！"
 
 # ---------------------------------------------------------
-# 1. 准备 dae 的规则目录 (使用 Loyalsoldier 满血版)
+# 7.1. 准备 dae 的规则目录 (使用 Loyalsoldier 满血版)
 # ---------------------------------------------------------
 mkdir -p files/usr/share/v2ray
 echo "-> 下载 dae 专用的 Loyalsoldier 规则 (全小写)..."
@@ -47,7 +47,7 @@ curl -L -o files/usr/share/v2ray/geoip.dat https://fastly.jsdelivr.net/gh/Loyals
 
 
 # ---------------------------------------------------------
-# 8. 准备 Nikki (Mihomo) 的规则目录 (使用 MetaCubeX 源)
+# 7.2. 准备 Nikki (Mihomo) 的规则目录 (使用 MetaCubeX 源)
 # ---------------------------------------------------------
 mkdir -p files/etc/nikki/run
 echo "-> 下载 Nikki 专用的 MetaCubeX 规则 (强制首字母大写 + MMDB 支持)..."

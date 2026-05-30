@@ -150,6 +150,12 @@ jobs:
         if: steps.compile.outputs.status == 'success'  && !cancelled()
         run: |
           cd openwrt/bin/targets/*/*
+
+          for file in *.img.gz *.img *.vmdk *.qcow2 *.efi.img.gz; do
+            [ -f "$file" ] || continue
+            mv "$file" "${TARGET}_${FILE_DATE}_$file"
+          done
+
           rm -rf packages
           echo "FIRMWARE=$PWD" >> $GITHUB_ENV
           echo "status=success" >> $GITHUB_OUTPUT

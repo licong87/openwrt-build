@@ -113,27 +113,28 @@ else
 fi
 
 # =========================================================
-# 10. 智能补充京东云亚瑟 (RE-SS-01) factory 固件编译逻辑
+# 10. 仅针对 ImmortalWrt 源码，强制注入亚瑟和兆能M2的 factory 固件
 # =========================================================
 
-# 指定配置文件路径
 MK_FILE="target/linux/qualcommax/image/ipq60xx.mk"
 
-if [ -f "$MK_FILE" ]; then
-    # 使用 grep 检查文件里是否已经包含了 factory.bin 的定义
-    if grep -q "IMAGE/factory.bin" "$MK_FILE"; then
-        echo "-> 检测到源码已自带 factory 固件打包逻辑 (如 Libwrt)，跳过注入。"
+# 检查当前源码是否为 ImmortalWrt
+if grep -iq "immortalwrt" include/version.mk 2>/dev/null; then
+    echo "-> 检测到当前为 ImmortalWrt 源码，开始注入 factory 编译代码..."
+    
+    if [ -f "$MK_FILE" ]; then
+        # 针对 京东云亚瑟 (re-ss-01)
+        sed -i '/define Device\/.*re-ss-01/,/endef/ s/IMAGES := sysupgrade.bin/IMAGES := sysupgrade.bin factory.bin/' "$MK_FILE"
+        sed -i '/define Device\/.*re-ss-01/,/endef/ s/IMAGE\/sysupgrade.bin.*/&\n  IMAGE\/factory.bin := append-kernel | pad-to $$$$(BLOCKSIZE) | append-rootfs | pad-rootfs/' "$MK_FILE"
+        
+        # 针对 兆能 M2 (兼容 zn_m2 或 zn-m2 的写法)
+        sed -i '/define Device\/.*zn[-_]m2/,/endef/ s/IMAGES := sysupgrade.bin/IMAGES := sysupgrade.bin factory.bin/' "$MK_FILE"
+        sed -i '/define Device\/.*zn[-_]m2/,/endef/ s/IMAGE\/sysupgrade.bin.*/&\n  IMAGE\/factory.bin := append-kernel | pad-to $$$$(BLOCKSIZE) | append-rootfs | pad-rootfs/' "$MK_FILE"
+        
+        echo "✅ 专属 factory 补丁已打入！"
     else
-        echo "-> 未检测到 factory 固件逻辑 (如 ImmortalWrt)，正在进行动态注入..."
-        
-        # 1. 在亚瑟的配置块中，找到 IMAGES 变量，追加 factory.bin
-        sed -i '/define Device\/jdcloud_re-ss-01/,/endef/ s/IMAGES := sysupgrade.bin/IMAGES := sysupgrade.bin factory.bin/' "$MK_FILE"
-        
-        # 2. 在亚瑟的配置块中，找到 IMAGE/sysupgrade.bin 的定义行，在它后面加上 IMAGE/factory.bin 的打包规则
-        sed -i '/define Device\/jdcloud_re-ss-01/,/endef/ s/IMAGE\/sysupgrade.bin.*/&\n  IMAGE\/factory.bin := append-kernel | pad-to $$$$(BLOCKSIZE) | append-rootfs | pad-rootfs/' "$MK_FILE"
-        
-        echo "✅ factory 固件编译逻辑注入完成！"
+        echo "❌ 未找到 ipq60xx.mk 文件，跳过注入。"
     fi
 else
-    echo "未找到 $MK_FILE，跳过 factory 固件逻辑处理。"
+    echo "-> 当前为非 ImmortalWrt 源码 (如 Libwrt)，跳过 factory 补丁。"
 fi

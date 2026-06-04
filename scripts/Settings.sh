@@ -77,3 +77,32 @@ https://github.com/Zephyruso/zashboard/releases/latest/download/dist-cdn-fonts.z
 unzip -oq /tmp/zashboard.zip -d files/etc/nikki/run/ui
 
 echo "✅ Nikki Dashboard 预装完成"
+
+# =========================================================
+# 9. 自定义注入：x86 固件首次开机默认绑定 eth0、eth2、eth3 到 LAN 网桥
+# =========================================================
+
+# 自动探测 OpenWrt 源码目录
+# 如果当前目录下有 openwrt 文件夹，说明在仓库根目录，定位到子目录；否则认为当前就是源码根目录
+if [ -d "openwrt" ]; then
+    WRT_DIR="openwrt"
+else
+    WRT_DIR="."
+fi
+
+# 创建自定义 files 目录结构
+mkdir -p ${WRT_DIR}/files/etc/uci-defaults
+
+# 写入绑定 LAN 口的自定义脚本
+cat << "EOF" > ${WRT_DIR}/files/etc/uci-defaults/99-custom-lan-ports
+#!/bin/sh
+
+# 确保在默认网络配置生成后，将 eth0 eth2 eth3 绑定到 br-lan 网桥
+uci set network.@device[0].ports='eth0 eth2 eth3'
+uci commit network
+
+exit 0
+EOF
+
+# 赋予脚本可执行权限
+chmod +x ${WRT_DIR}/files/etc/uci-defaults/99-custom-lan-ports

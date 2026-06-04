@@ -111,34 +111,3 @@ EOF
 else
     echo "当前编译目标非 x86 (可能是 ARM 等)，跳过网口绑定脚本注入，保留官方默认网络配置。"
 fi
-
-# =========================================================
-# 10. 终极版：使用 AWK 强力注入亚瑟和兆能M2的 factory 固件
-# =========================================================
-
-MK_FILE="target/linux/qualcommax/image/ipq60xx.mk"
-
-# 检查当前源码是否为 ImmortalWrt
-if grep -iq "immortalwrt" include/version.mk 2>/dev/null; then
-    echo "-> 检测到当前为 ImmortalWrt 源码，使用 AWK 强行注入 factory 打包参数..."
-    
-    if [ -f "$MK_FILE" ]; then
-        # 使用 awk 找到对应设备块，并在 endef 前强行插入变量，完美避开找不到原有变量的尴尬
-        awk '
-        /^define Device\/.*(re-ss-01|zn[-_]m2)/ {
-            in_device=1;
-        }
-        in_device && /^endef/ {
-            print "  IMAGE/factory.bin := append-kernel | pad-to $$$$(BLOCKSIZE) | append-rootfs | pad-rootfs"
-            print "  IMAGES += factory.bin"
-            in_device=0;
-        }
-        {print}' "$MK_FILE" > "${MK_FILE}.tmp" && mv "${MK_FILE}.tmp" "$MK_FILE"
-        
-        echo "✅ factory 补丁已强力打入！"
-    else
-        echo "❌ 未找到 $MK_FILE 文件，跳过注入。"
-    fi
-else
-    echo "-> 当前为非 ImmortalWrt 源码，跳过 factory 补丁。"
-fi

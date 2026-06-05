@@ -111,3 +111,21 @@ EOF
 else
     echo "当前编译目标非 x86 (可能是 ARM 等)，跳过网口绑定脚本注入，保留官方默认网络配置。"
 fi
+
+# =========================================================
+# 10. 调整 ZeroTier 菜单层级 (在编译源码阶段修改)
+# =========================================================
+echo "🚀 正在修改 ZeroTier 源码菜单路径..."
+
+# 动态寻找 luaci-app-zerotier 的源码目录并进行无差别替换
+if [ -d "feeds/luci/applications/luci-app-zerotier" ]; then
+    # 1. 替换新版 JSON 菜单文件中的路径
+    find feeds/luci/applications/luci-app-zerotier/ -type f -name "*.json" -exec sed -i 's/admin\/vpn\/zerotier/admin\/services\/zerotier/g' {} +
+    
+    # 2. 替换可能存在的旧版 Lua 路由文件中的路径（做兼容兜底）
+    find feeds/luci/applications/luci-app-zerotier/ -type f -name "*.lua" -exec sed -i 's/admin\/vpn\/zerotier/admin\/services\/zerotier/g' {} +
+    
+    echo "✅ ZeroTier 菜单源码修改完成"
+else
+    echo "⚠️ 未找到 ZeroTier 源码目录，跳过修改。"
+fi

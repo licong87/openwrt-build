@@ -131,8 +131,13 @@ else
 fi
 
 # =========================================================
-# 11. 修复 daed 依赖
+# 11. 修复 daed 依赖 (Kconfig 优雅版)
 # =========================================================
-echo "🚀 正在解除 daed 的 vmlinux-btf 强依赖..."
-sed -i 's/+vmlinux-btf //g' package/luci-app-daed/daed/Makefile
-echo "✅ daed 依赖解除完成"
+echo "🚀 正在通过系统配置关闭外部 BTF 依赖..."
+
+# 删除配置单中可能存在的旧版开启选项
+sed -i '/CONFIG_DAED_USE_VMLINUX_BTF/d' .config
+# 明确写入：不使用外部 vmlinux-btf 软件包 (依赖内核原生 BTF)
+echo '# CONFIG_DAED_USE_VMLINUX_BTF is not set' >> .config
+
+echo "✅ 外部 BTF 依赖关闭完成"

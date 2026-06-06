@@ -1,66 +1,47 @@
 #!/bin/bash
-set -e
-
-log() {
-    echo -e "\n=============================="
-    echo "📌 [$1] $2"
-    echo "=============================="
-}
-
-done_ok() {
-    echo "✅ DONE: $1"
-    echo "------------------------------"
-}
-
-fail() {
-    echo "❌ FAIL: $1"
-    exit 1
-}
-
-echo "================ CI SETTINGS START ================"
 
 # =========================================================
-# 1. LuCI 基础
+# 🚀 OpenWrt 自定义构建脚本（可读增强稳定版）
 # =========================================================
-log "1/12" "LuCI 基础配置"
+
+# =========================================================
+# 1. 基础 LuCI 配置
+# =========================================================
+echo "📌 [1/12] 配置 LuCI 基础环境..."
 
 echo "CONFIG_PACKAGE_luci=y" >> .config
 echo "CONFIG_LUCI_LANG_zh_Hans=y" >> .config
 
-done_ok "LuCI 基础配置"
 
 # =========================================================
-# 2. 网络优化
+# 2. 内核网络优化（UDP/转发优化）
 # =========================================================
-log "2/12" "网络优化"
+echo "📌 [2/12] 优化内核网络参数..."
 
 mkdir -p files/etc
 
-cat >> files/etc/sysctl.conf <<EOF
-net.netfilter.nf_conntrack_udp_timeout=10
-net.netfilter.nf_conntrack_udp_timeout_stream=60
-EOF
+echo "net.netfilter.nf_conntrack_udp_timeout=10" >> files/etc/sysctl.conf
+echo "net.netfilter.nf_conntrack_udp_timeout_stream=60" >> files/etc/sysctl.conf
 
-done_ok "网络优化"
 
 # =========================================================
-# 3. NSS
+# 3. Qualcomm NSS 优化
 # =========================================================
-log "3/12" "NSS 配置"
+echo "📌 [3/12] Qualcomm NSS 配置优化..."
 
 if [ -d "target/linux/qualcommax" ]; then
     echo "CONFIG_FEED_nss_packages=n" >> .config
     echo "CONFIG_FEED_sqm_scripts_nss=n" >> .config
     echo "CONFIG_NSS_FIRMWARE_VERSION_11_4=n" >> .config
     echo "CONFIG_NSS_FIRMWARE_VERSION_12_2=y" >> .config
+    echo "✅ NSS 配置已锁定 12.2"
 fi
 
-done_ok "NSS 配置"
 
 # =========================================================
-# 4. 时区
+# 4. 时区修复（避免日志错乱）
 # =========================================================
-log "4/12" "时区修复"
+echo "📌 [4/12] 修复系统时区..."
 
 sed -i "s/timezone='UTC'/timezone='CST-8'/g" package/base-files/files/bin/config_generate
 sed -i "s/zonename='UTC'/zonename='Asia\/Shanghai'/g" package/base-files/files/bin/config_generate
@@ -68,111 +49,131 @@ sed -i "s/zonename='UTC'/zonename='Asia\/Shanghai'/g" package/base-files/files/b
 echo "CONFIG_PACKAGE_zoneinfo-core=y" >> .config
 echo "CONFIG_PACKAGE_zoneinfo-asia=y" >> .config
 
-done_ok "时区修复"
 
 # =========================================================
-# 5. mihomo 隔离
+# 5. 规则库预置（Nikki / v2ray）
 # =========================================================
-log "5/12" "mihomo 清理"
+echo "📌 [5/12] 下载规则库..."
 
-sed -i '/mihomo/d' .config || true
+mkdir -p files/usr/share/v2ray
 
-cat >> .config <<EOF
-# CONFIG_PACKAGE_mihomo is not set
-# CONFIG_PACKAGE_mihomo-alpha is not set
-# CONFIG_PACKAGE_mihomo-meta is not set
-EOF
+curl -L -o files/usr/share/v2ray/geosite.dat \
+https://fastly.jsdelivr.net/gh/Loyalsoldier/v2ray-rules-dat@release/geosite.dat
 
-rm -rf package/OpenWrt-nikki/mihomo* feeds/packages/net/mihomo* feeds/luci/applications/luci-app-mihomo* 2>/dev/null || true
+curl -L -o files/usr/share/v2ray/geoip.dat \
+https://fastly.jsdelivr.net/gh/Loyalsoldier/v2ray-rules-dat@release/geoip.dat
 
-done_ok "mihomo 清理完成"
+
+mkdir -p files/etc/nikki/run
+
+curl -L -o files/etc/nikki/run/GeoSite.dat \
+https://fastly.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@release/geosite.dat
+
+curl -L -o files/etc/nikki/run/GeoIP.dat \
+https://fastly.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@release/geoip.dat
+
+curl -L -o files/etc/nikki/run/ASN.mmdb \
+https://fastly.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@release/GeoLite2-ASN.mmdb
+
+curl -L -o files/etc/nikki/run/Country.mmdb \
+https://fastly.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@release/country.mmdb
+
+curl -L -o files/etc/nikki/run/geoip.metadb \
+https://fastly.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@release/geoip.metadb
+
+echo "✅ 规则库下载完成"
+
 
 # =========================================================
-# 6. DAED BTF
+# 6. Nikki Dashboard 预装
 # =========================================================
-log "6/12" "DAED BTF"
+echo "📌 [6/12] 下载 Nikki Dashboard..."
 
-sed -i '/CONFIG_DAED_USE_VMLINUX_BTF/d' .config || true
-echo "CONFIG_DAED_USE_VMLINUX_BTF=n" >> .config
+mkdir -p files/etc/nikki/run/ui
 
-done_ok "DAED BTF"
+curl -L -o /tmp/zashboard.zip \
+https://github.com/Zephyruso/zashboard/releases/latest/download/dist-cdn-fonts.zip
+
+unzip -oq /tmp/zashboard.zip -d files/etc/nikki/run/ui
+
+echo "✅ Dashboard 安装完成"
+
 
 # =========================================================
-# 7. x86 LAN
+# 7. x86 LAN 自动绑定
 # =========================================================
-log "7/12" "LAN 绑定"
+echo "📌 [7/12] x86 网口绑定配置..."
 
-if grep -q "CONFIG_TARGET_x86=y" .config; then
-    mkdir -p files/etc/uci-defaults
+if [ -d "openwrt" ]; then
+    WRT_DIR="openwrt"
+else
+    WRT_DIR="."
+fi
 
-    cat > files/etc/uci-defaults/99-custom-lan-ports <<EOF
+if grep -q "CONFIG_TARGET_x86=y" ${WRT_DIR}/.config; then
+    mkdir -p ${WRT_DIR}/files/etc/uci-defaults
+
+    cat << "EOF" > ${WRT_DIR}/files/etc/uci-defaults/99-custom-lan-ports
 #!/bin/sh
 uci set network.@device[0].ports='eth0 eth2 eth3'
 uci commit network
 exit 0
 EOF
 
-    chmod +x files/etc/uci-defaults/99-custom-lan-ports
+    chmod +x ${WRT_DIR}/files/etc/uci-defaults/99-custom-lan-ports
+
+    echo "✅ x86 LAN 绑定已注入"
 fi
 
-done_ok "LAN 配置"
 
 # =========================================================
-# 8. 规则库
+# 8. ZeroTier 菜单修复
 # =========================================================
-log "8/12" "规则库下载"
-
-mkdir -p files/usr/share/v2ray files/etc/nikki/run
-
-curl -sL -o files/usr/share/v2ray/geosite.dat \
-https://fastly.jsdelivr.net/gh/Loyalsoldier/v2ray-rules-dat@release/geosite.dat
-
-curl -sL -o files/usr/share/v2ray/geoip.dat \
-https://fastly.jsdelivr.net/gh/Loyalsoldier/v2ray-rules-dat@release/geoip.dat
-
-curl -sL -o files/etc/nikki/run/GeoSite.dat \
-https://fastly.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@release/geosite.dat
-
-curl -sL -o files/etc/nikki/run/GeoIP.dat \
-https://fastly.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@release/geoip.dat
-
-done_ok "规则库"
-
-# =========================================================
-# 9. Dashboard
-# =========================================================
-log "9/12" "Dashboard"
-
-mkdir -p files/etc/nikki/run/ui
-
-curl -sL -o /tmp/zashboard.zip \
-https://github.com/Zephyruso/zashboard/releases/latest/download/dist-cdn-fonts.zip
-
-unzip -oq /tmp/zashboard.zip -d files/etc/nikki/run/ui
-
-done_ok "Dashboard"
-
-# =========================================================
-# 10. ZeroTier
-# =========================================================
-log "10/12" "ZeroTier 修复"
+echo "📌 [8/12] ZeroTier 菜单路径修复..."
 
 if [ -d "feeds/luci/applications/luci-app-zerotier" ]; then
-    find feeds/luci/applications/luci-app-zerotier -name "*.json" \
+    find feeds/luci/applications/luci-app-zerotier/ -type f -name "*.json" \
         -exec sed -i 's/admin\/vpn\/zerotier/admin\/services\/zerotier/g' {} +
 
-    find feeds/luci/applications/luci-app-zerotier -name "*.lua" \
+    find feeds/luci/applications/luci-app-zerotier/ -type f -name "*.lua" \
         -exec sed -i 's/admin\/vpn\/zerotier/admin\/services\/zerotier/g' {} +
+
+    echo "✅ ZeroTier 菜单修复完成"
 fi
 
-done_ok "ZeroTier"
 
 # =========================================================
-# 11. DAED 替换
+# 9. DAED BTF 修复（推荐稳定版）
 # =========================================================
-log "11/12" "DAED 替换"
+echo "📌 [9/12] 修复 DAED vmlinux-btf 依赖（使用内核 BTF 模式）..."
 
-rm -rf package/daed package/luci-app-daed package/temp_daed_repo 2>/dev/null || true
+# 只保留内核 BTF 模式，不使用外部 vmlinux-btf 包
+sed -i '/CONFIG_DAED_USE_VMLINUX_BTF/d' .config
+echo '# CONFIG_DAED_USE_VMLINUX_BTF is not set' >> .config
+
+echo "✅ DAED BTF 已锁定为 kernel built-in 模式"
+
+
+echo "📌 删除 mihomo-alpha（修复循环依赖）..."
+
+rm -rf package/OpenWrt-nikki/mihomo-alpha
+
+echo "✅ mihomo-alpha 已删除"
+
+
+# =========================================================
+# 11. DAED 替换（QiuSimons 稳定版）
+# =========================================================
+echo "📌 [11/12] 替换 DAED 为 QiuSimons 版本..."
+
+./scripts/feeds uninstall dae
+./scripts/feeds uninstall daed
+./scripts/feeds uninstall luci-app-dae
+./scripts/feeds uninstall luci-app-daed
+
+rm -rf package/temp_daed_repo
+rm -rf package/daed
+rm -rf package/luci-app-daed
 
 git clone --depth=1 -b kix https://github.com/QiuSimons/luci-app-daed.git package/temp_daed_repo
 
@@ -180,17 +181,11 @@ mv package/temp_daed_repo/luci-app-daed package/luci-app-daed
 mv package/temp_daed_repo/daed package/daed
 rm -rf package/temp_daed_repo
 
-sed -i '/CONFIG_DAED_USE_VMLINUX_BTF/d' .config || true
+# 关键：关闭外部 BTF
+sed -i '/CONFIG_DAED_USE_VMLINUX_BTF/d' .config
 echo "CONFIG_DAED_USE_VMLINUX_BTF=n" >> .config
 
-sed -i 's/+DAED_USE_VMLINUX_BTF:vmlinux-btf//g' package/daed/Makefile || true
+# 关键：删除 Makefile 外部依赖
+sed -i 's/+DAED_USE_VMLINUX_BTF:vmlinux-btf//g' package/daed/Makefile
 
-done_ok "DAED 替换"
-
-# =========================================================
-# 12. END
-# =========================================================
-log "12/12" "完成"
-
-echo "🎉 CI SETTINGS COMPLETE - STABLE READY"
-echo "================ CI SETTINGS END ================"
+echo "✅ DAED 替换完成"

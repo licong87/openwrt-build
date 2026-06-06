@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
   # 每月1号北京时间早上8点执行 (UTC 00:00)
   schedule:
-    - cron: '0 0 1 * *'
+    - cron: '0 0 * * 1'
 
 #CI权限
 permissions: write-all

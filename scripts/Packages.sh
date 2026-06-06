@@ -20,16 +20,19 @@ UPDATE_PACKAGE() {
 	fi
 }
 
-# 精准清理官方冲突包
-# 清理官方自带的 dae/daed 核心与面板 (QiuSimons仓库已自带，保留会冲突)
-rm -rf feeds/packages/net/dae
-rm -rf feeds/packages/net/daed
-rm -rf feeds/luci/applications/luci-app-dae
-rm -rf feeds/luci/applications/luci-app-daed
+# =========================================================
+# 精准清理官方冲突包 (注意路径：当前在 package 目录下，需回退一级)
+# =========================================================
 
-# 清理官方自带的 mihomo 核心 (防止与 Nikki 产生 recursive dependency 依赖死循环)
-rm -rf feeds/packages/net/mihomo
-rm -rf feeds/packages/net/mihomo-alpha
+# 1. 清理官方自带的 dae/daed 核心与面板
+rm -rf ../feeds/packages/net/dae
+rm -rf ../feeds/packages/net/daed
+rm -rf ../feeds/luci/applications/luci-app-dae
+rm -rf ../feeds/luci/applications/luci-app-daed
+
+# 2. 清理官方自带的 mihomo 核心 (防止死循环)
+rm -rf ../feeds/packages/net/mihomo
+rm -rf ../feeds/packages/net/mihomo-alpha
 
 UPDATE_PACKAGE "argon" "jerrykuku/luci-theme-argon" "master"
 UPDATE_PACKAGE "argon-config" "jerrykuku/luci-app-argon-config" "master"

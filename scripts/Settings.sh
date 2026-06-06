@@ -162,20 +162,21 @@ echo "✅ Mihomo 核心冲突清理完成"
 # =========================================================
 
 echo "🧹 正在使用官方脚本干净卸载自带的 DAED..."
-# 使用官方 feeds 脚本卸载包，这会优雅地清除软链接和依赖索引，而不是暴力删文件
 ./scripts/feeds uninstall dae
 ./scripts/feeds uninstall daed
 ./scripts/feeds uninstall luci-app-dae
 ./scripts/feeds uninstall luci-app-daed
 
 echo "📦 正在拉取 QiuSimons 大神版源码..."
-# 将大神的仓库 clone 到 package 的临时目录
 git clone --depth=1 -b kix https://github.com/QiuSimons/luci-app-daed.git package/temp_daed_repo
 
 echo "👑 正在将自定义源码提升为最高优先级的嫡系包..."
-# 直接将核心与面板源码提取到 package/ 目录下，名字和版本号一字不改！
 mv package/temp_daed_repo/luci-app-daed package/luci-app-daed
 mv package/temp_daed_repo/daed package/daed
 rm -rf package/temp_daed_repo
+
+echo "✂️ 正在剥离 DAED 的无效 vmlinux-btf 依赖..."
+sed -i 's/+vmlinux-btf //g' package/daed/Makefile
+sed -i 's/+vmlinux-btf//g' package/daed/Makefile
 
 echo "✅ 优雅替换完成！"

@@ -135,3 +135,4 @@ fi
 # =========================================================
 echo "🚀 正在解除 daed 的 vmlinux-btf 强依赖..."
 sed -i 's/+vmlinux-btf //g' package/luci-app-daed/daed/Makefile
+echo "✅ daed 依赖解除完成"

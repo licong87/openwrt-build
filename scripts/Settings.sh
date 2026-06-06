@@ -144,18 +144,15 @@ fi
 
 
 # =========================================================
-# 9. DAED 修复（重点）
+# 9. DAED BTF 修复（推荐稳定版）
 # =========================================================
-echo "📌 [9/12] 修复 DAED vmlinux-btf 依赖..."
+echo "📌 [9/12] 修复 DAED vmlinux-btf 依赖（使用内核 BTF 模式）..."
 
-# 关闭 config
+# 只保留内核 BTF 模式，不使用外部 vmlinux-btf 包
 sed -i '/CONFIG_DAED_USE_VMLINUX_BTF/d' .config
-echo "CONFIG_DAED_USE_VMLINUX_BTF=n" >> .config
+echo '# CONFIG_DAED_USE_VMLINUX_BTF is not set' >> .config
 
-# 删除 Makefile 条件依赖
-sed -i 's/+DAED_USE_VMLINUX_BTF:vmlinux-btf//g' package/daed/Makefile
-
-echo "✅ DAED 修复完成"
+echo "✅ DAED BTF 已锁定为 kernel built-in 模式"
 
 
 # =========================================================

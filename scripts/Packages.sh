@@ -20,6 +20,20 @@ UPDATE_PACKAGE() {
 	fi
 }
 
+# 精准清理官方冲突包
+# 清理官方自带的 dae/daed 核心与面板 (QiuSimons仓库已自带，保留会冲突)
+rm -rf feeds/packages/net/dae
+rm -rf feeds/packages/net/daed
+rm -rf feeds/luci/applications/luci-app-dae
+rm -rf feeds/luci/applications/luci-app-daed
+
+# 清理官方自带的 mihomo 核心 (防止与 Nikki 产生 recursive dependency 依赖死循环)
+rm -rf feeds/packages/net/mihomo
+rm -rf feeds/packages/net/mihomo-alpha
+
+# 强行抹除 daed 对 vmlinux-btf 的外挂包依赖，让其直接调用内核原生 BTF
+sed -i 's/+vmlinux-btf //g' package/luci-app-daed/daed/Makefile
+
 UPDATE_PACKAGE "argon" "jerrykuku/luci-theme-argon" "master"
 UPDATE_PACKAGE "argon-config" "jerrykuku/luci-app-argon-config" "master"
 UPDATE_PACKAGE "kucat" "sirpdboy/luci-theme-kucat" "master"
@@ -27,7 +41,7 @@ UPDATE_PACKAGE "kucat-config" "sirpdboy/luci-app-kucat-config" "master"
 # UPDATE_PACKAGE "momo" "nikkinikki-org/OpenWrt-momo" "main"
 UPDATE_PACKAGE "nikki" "nikkinikki-org/OpenWrt-nikki" "main"
 UPDATE_PACKAGE "openclash" "vernesong/OpenClash" "dev" "pkg"
-UPDATE_PACKAGE "daed" "QiuSimons/luci-app-daed" "kix"
+UPDATE_PACKAGE "luci-app-daed" "QiuSimons/luci-app-daed" "kix"
 # UPDATE_PACKAGE "passwall" "Openwrt-Passwall/openwrt-passwall" "main" "pkg"
 # UPDATE_PACKAGE "passwall2" "Openwrt-Passwall/openwrt-passwall2" "main" "pkg"
 # UPDATE_PACKAGE "luci-app-tailscale" "asvow/luci-app-tailscale" "main"

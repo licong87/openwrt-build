@@ -4,11 +4,6 @@
 # 🚀 OpenWrt 自定义构建脚本（可读增强稳定版）
 # =========================================================
 
-echo "========== MIHOMO CHECK =========="
-find package feeds -iname '*mihomo*'
-echo "=================================="
-
-
 # =========================================================
 # 1. 基础 LuCI 配置
 # =========================================================
@@ -159,20 +154,11 @@ echo '# CONFIG_DAED_USE_VMLINUX_BTF is not set' >> .config
 echo "✅ DAED BTF 已锁定为 kernel built-in 模式"
 
 
-# =========================================================
-# 10. Mihomo 冲突修复（根治版）
-# =========================================================
-echo "📌 [10/12] 彻底清理 Mihomo feeds 冲突..."
+echo "📌 删除 mihomo-alpha（修复循环依赖）..."
 
-# ❗关键：删除 feeds 层（不是 .config）
-rm -rf feeds/packages/net/mihomo*
-rm -rf feeds/packages/net/mihomo-meta*
-rm -rf feeds/luci/applications/luci-app-openclash/luasrc/*mihomo* 2>/dev/null
+rm -rf package/OpenWrt-nikki/mihomo-alpha
 
-# 防止残留 Kconfig 目录
-find feeds -type f -path "*mihomo*" -delete 2>/dev/null
-
-echo "✅ Mihomo feeds 冲突已彻底清理"
+echo "✅ mihomo-alpha 已删除"
 
 
 # =========================================================

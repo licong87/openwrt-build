@@ -129,3 +129,9 @@ if [ -d "feeds/luci/applications/luci-app-zerotier" ]; then
 else
     echo "⚠️ 未找到 ZeroTier 源码目录，跳过修改。"
 fi
+
+# =========================================================
+# 11. 修复 daed 依赖
+# =========================================================
+echo "🚀 正在解除 daed 的 vmlinux-btf 强依赖..."
+sed -i 's/+vmlinux-btf //g' package/luci-app-daed/daed/Makefile

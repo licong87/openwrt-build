@@ -43,21 +43,6 @@ UPDATE_PACKAGE "nikki" "nikkinikki-org/OpenWrt-nikki" "main"
 UPDATE_PACKAGE "openclash" "vernesong/OpenClash" "dev" "pkg"
 UPDATE_PACKAGE "luci-app-daed" "QiuSimons/luci-app-daed" "kix"
 
-# =========================================================
-# 新增：强制覆盖 ImmortalWrt 官方源的 daed，防止被 APK 机制覆盖
-# =========================================================
-echo "🛡️ 正在强制锁定 daed 源码目录..."
-
-# 1. 确保目录存在
-mkdir -p ../feeds/luci/applications/luci-app-daed
-
-# 2. 将刚才通过函数下载并解压好的源码（通常在当前目录的 luci-app-daed 文件夹里）
-# 强制拷贝覆盖到 feeds 的编译标准位置
-cp -rf ./luci-app-daed/* ../feeds/luci/applications/luci-app-daed/
-
-echo "✅ daed 源码已锁定，编译系统将优先使用自定义版本"
-
-
 # UPDATE_PACKAGE "passwall" "Openwrt-Passwall/openwrt-passwall" "main" "pkg"
 # UPDATE_PACKAGE "passwall2" "Openwrt-Passwall/openwrt-passwall2" "main" "pkg"
 # UPDATE_PACKAGE "luci-app-tailscale" "asvow/luci-app-tailscale" "main"

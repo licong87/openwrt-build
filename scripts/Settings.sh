@@ -158,32 +158,24 @@ echo '# CONFIG_PACKAGE_mihomo is not set' >> .config
 echo "✅ Mihomo 核心冲突清理完成"
 
 # =========================================================
-# 彻底替换 QiuSimons 版 DAED (保留真实版本号 + 彻底避开缓存)
+# 优雅替换 QiuSimons 版 DAED (遵循 OpenWrt 原生优先级机制)
 # =========================================================
 
-echo "🛡️ 开始清理官方 DAED 残留与软链接..."
-# 1. 物理擦除 feeds 和 package 里的官方痕迹
-rm -rf feeds/packages/net/dae
-rm -rf feeds/packages/net/daed
-rm -rf feeds/luci/applications/luci-app-dae
-rm -rf feeds/luci/applications/luci-app-daed
-rm -rf package/feeds/packages/dae
-rm -rf package/feeds/packages/daed
-rm -rf package/feeds/luci/luci-app-dae
-rm -rf package/feeds/luci/luci-app-daed
+echo "🧹 正在使用官方脚本干净卸载自带的 DAED..."
+# 使用官方 feeds 脚本卸载包，这会优雅地清除软链接和依赖索引，而不是暴力删文件
+./scripts/feeds uninstall dae
+./scripts/feeds uninstall daed
+./scripts/feeds uninstall luci-app-dae
+./scripts/feeds uninstall luci-app-daed
 
 echo "📦 正在拉取 QiuSimons 大神版源码..."
-# 2. 拉取大神的真实源码到临时目录
+# 将大神的仓库 clone 到 package 的临时目录
 git clone --depth=1 -b kix https://github.com/QiuSimons/luci-app-daed.git package/temp_daed_repo
 
-# 3. 关键动作：重命名文件夹，给它一个“新身份” (luci-app-daed-custom)
-# 这样系统绝对不会去匹配云端的官方缓存，但保留源码里的 PKG_VERSION 不动！
-mv package/temp_daed_repo/luci-app-daed package/luci-app-daed-custom
+echo "👑 正在将自定义源码提升为最高优先级的嫡系包..."
+# 直接将核心与面板源码提取到 package/ 目录下，名字和版本号一字不改！
+mv package/temp_daed_repo/luci-app-daed package/luci-app-daed
 mv package/temp_daed_repo/daed package/daed
 rm -rf package/temp_daed_repo
 
-echo "✏️ 正在同步修改 Makefile 中的插件注册名..."
-# 4. 只是把 Makefile 里的编译对象名字改成自定义的，里面的版本号只字不改
-sed -i 's/luci-app-daed/luci-app-daed-custom/g' package/luci-app-daed-custom/Makefile
-
-echo "✅ DAED 定制版（原汁原味版本号）注入完成！"
+echo "✅ 优雅替换完成！"

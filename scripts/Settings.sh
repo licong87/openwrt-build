@@ -156,3 +156,36 @@ echo '# CONFIG_PACKAGE_mihomo-alpha is not set' >> .config
 echo '# CONFIG_PACKAGE_mihomo is not set' >> .config
 
 echo "✅ Mihomo 核心冲突清理完成"
+
+# =========================================================
+# 彻底替换 QiuSimons 版 DAED (暴力破解云端缓存与软链接)
+# =========================================================
+
+echo "🛡️ 开始清理官方 DAED 残留与软链接..."
+# 删除 Feeds 里的官方源码
+rm -rf feeds/packages/net/dae
+rm -rf feeds/packages/net/daed
+rm -rf feeds/luci/applications/luci-app-dae
+rm -rf feeds/luci/applications/luci-app-daed
+
+# 删除 package/feeds 里的软链接（这是死灰复燃的根源）
+rm -rf package/feeds/packages/dae
+rm -rf package/feeds/packages/daed
+rm -rf package/feeds/luci/luci-app-dae
+rm -rf package/feeds/luci/luci-app-daed
+
+echo "📦 正在拉取 QiuSimons 大神版源码..."
+# 将大神的仓库 clone 到 package 的一个临时目录
+git clone --depth=1 -b kix https://github.com/QiuSimons/luci-app-daed.git package/temp_daed_repo
+
+# 将仓库里面的核心包和面板包提出来，平铺到 package 目录下
+mv package/temp_daed_repo/luci-app-daed package/luci-app-daed
+mv package/temp_daed_repo/daed package/daed
+rm -rf package/temp_daed_repo
+
+echo "🔥 正在篡改版本号，强杀 APK 云端缓存拦截..."
+# 把版本号强行改成 999！让系统认为本地的代码版本遥遥领先，强制触发本地源码编译！
+sed -i 's/PKG_RELEASE:=.*/PKG_RELEASE:=999/g' package/luci-app-daed/Makefile
+sed -i 's/PKG_RELEASE:=.*/PKG_RELEASE:=999/g' package/daed/Makefile
+
+echo "✅ DAED 定制版注入完成！"

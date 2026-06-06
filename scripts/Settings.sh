@@ -141,3 +141,18 @@ sed -i '/CONFIG_DAED_USE_VMLINUX_BTF/d' .config
 echo '# CONFIG_DAED_USE_VMLINUX_BTF is not set' >> .config
 
 echo "✅ 外部 BTF 依赖关闭完成"
+
+# =========================================================
+# 12. 修复 Mihomo 核心依赖死循环
+# =========================================================
+echo "🚀 正在清理配置单中的官方 Mihomo 冲突残留..."
+
+# 1. 删掉原来的开启指令（如果有的话）
+sed -i '/CONFIG_PACKAGE_mihomo-alpha/d' .config
+sed -i '/CONFIG_PACKAGE_mihomo/d' .config
+
+# 2. 明确写入：不要编译官方版核心！
+echo '# CONFIG_PACKAGE_mihomo-alpha is not set' >> .config
+echo '# CONFIG_PACKAGE_mihomo is not set' >> .config
+
+echo "✅ Mihomo 核心冲突清理完成"

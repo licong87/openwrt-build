@@ -31,9 +31,6 @@ rm -rf feeds/luci/applications/luci-app-daed
 rm -rf feeds/packages/net/mihomo
 rm -rf feeds/packages/net/mihomo-alpha
 
-# 强行抹除 daed 对 vmlinux-btf 的外挂包依赖，让其直接调用内核原生 BTF
-sed -i 's/+vmlinux-btf //g' package/luci-app-daed/daed/Makefile
-
 UPDATE_PACKAGE "argon" "jerrykuku/luci-theme-argon" "master"
 UPDATE_PACKAGE "argon-config" "jerrykuku/luci-app-argon-config" "master"
 UPDATE_PACKAGE "kucat" "sirpdboy/luci-theme-kucat" "master"

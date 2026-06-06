@@ -159,19 +159,19 @@ echo "✅ DAED 修复完成"
 
 
 # =========================================================
-# 10. Mihomo 冲突修复（重要）
+# 10. Mihomo 冲突修复（根治版）
 # =========================================================
-echo "📌 [10/12] 清理 Mihomo 依赖冲突..."
+echo "📌 [10/12] 彻底清理 Mihomo feeds 冲突..."
 
-sed -i '/CONFIG_PACKAGE_mihomo/d' .config
-sed -i '/CONFIG_PACKAGE_mihomo-alpha/d' .config
-sed -i '/CONFIG_PACKAGE_mihomo-meta/d' .config
+# ❗关键：删除 feeds 层（不是 .config）
+rm -rf feeds/packages/net/mihomo*
+rm -rf feeds/packages/net/mihomo-meta*
+rm -rf feeds/luci/applications/luci-app-openclash/luasrc/*mihomo* 2>/dev/null
 
-echo "# CONFIG_PACKAGE_mihomo is not set" >> .config
-echo "# CONFIG_PACKAGE_mihomo-alpha is not set" >> .config
-echo "# CONFIG_PACKAGE_mihomo-meta is not set" >> .config
+# 防止残留 Kconfig 目录
+find feeds -type f -path "*mihomo*" -delete 2>/dev/null
 
-echo "✅ Mihomo 冲突已解决"
+echo "✅ Mihomo feeds 冲突已彻底清理"
 
 
 # =========================================================

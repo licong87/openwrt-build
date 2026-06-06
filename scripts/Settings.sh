@@ -158,34 +158,32 @@ echo '# CONFIG_PACKAGE_mihomo is not set' >> .config
 echo "✅ Mihomo 核心冲突清理完成"
 
 # =========================================================
-# 彻底替换 QiuSimons 版 DAED (暴力破解云端缓存与软链接)
+# 彻底替换 QiuSimons 版 DAED (保留真实版本号 + 彻底避开缓存)
 # =========================================================
 
 echo "🛡️ 开始清理官方 DAED 残留与软链接..."
-# 删除 Feeds 里的官方源码
+# 1. 物理擦除 feeds 和 package 里的官方痕迹
 rm -rf feeds/packages/net/dae
 rm -rf feeds/packages/net/daed
 rm -rf feeds/luci/applications/luci-app-dae
 rm -rf feeds/luci/applications/luci-app-daed
-
-# 删除 package/feeds 里的软链接（这是死灰复燃的根源）
 rm -rf package/feeds/packages/dae
 rm -rf package/feeds/packages/daed
 rm -rf package/feeds/luci/luci-app-dae
 rm -rf package/feeds/luci/luci-app-daed
 
 echo "📦 正在拉取 QiuSimons 大神版源码..."
-# 将大神的仓库 clone 到 package 的一个临时目录
+# 2. 拉取大神的真实源码到临时目录
 git clone --depth=1 -b kix https://github.com/QiuSimons/luci-app-daed.git package/temp_daed_repo
 
-# 将仓库里面的核心包和面板包提出来，平铺到 package 目录下
-mv package/temp_daed_repo/luci-app-daed package/luci-app-daed
+# 3. 关键动作：重命名文件夹，给它一个“新身份” (luci-app-daed-custom)
+# 这样系统绝对不会去匹配云端的官方缓存，但保留源码里的 PKG_VERSION 不动！
+mv package/temp_daed_repo/luci-app-daed package/luci-app-daed-custom
 mv package/temp_daed_repo/daed package/daed
 rm -rf package/temp_daed_repo
 
-echo "🔥 正在篡改版本号，强杀 APK 云端缓存拦截..."
-# 把版本号强行改成 999！让系统认为本地的代码版本遥遥领先，强制触发本地源码编译！
-sed -i 's/PKG_RELEASE:=.*/PKG_RELEASE:=999/g' package/luci-app-daed/Makefile
-sed -i 's/PKG_RELEASE:=.*/PKG_RELEASE:=999/g' package/daed/Makefile
+echo "✏️ 正在同步修改 Makefile 中的插件注册名..."
+# 4. 只是把 Makefile 里的编译对象名字改成自定义的，里面的版本号只字不改
+sed -i 's/luci-app-daed/luci-app-daed-custom/g' package/luci-app-daed-custom/Makefile
 
-echo "✅ DAED 定制版注入完成！"
+echo "✅ DAED 定制版（原汁原味版本号）注入完成！"

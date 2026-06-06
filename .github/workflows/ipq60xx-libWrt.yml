@@ -5,7 +5,7 @@ name: ipq60xx-libWrt
 on:
   # 手动执行
   workflow_dispatch:
-  # 每月1号北京时间早上8点执行 (UTC 00:00)
+  # 每周一北京时间早上8点执行 (UTC 00:00)
   schedule:
     - cron: '0 0 * * 1'
 

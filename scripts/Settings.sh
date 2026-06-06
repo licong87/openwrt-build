@@ -175,8 +175,10 @@ mv package/temp_daed_repo/luci-app-daed package/luci-app-daed
 mv package/temp_daed_repo/daed package/daed
 rm -rf package/temp_daed_repo
 
-echo "✂️ 正在剥离 DAED 的无效 vmlinux-btf 依赖..."
-sed -i 's/+vmlinux-btf //g' package/daed/Makefile
-sed -i 's/+vmlinux-btf//g' package/daed/Makefile
+echo "========== DAED DEBUG =========="
+
+grep -R -n "vmlinux-btf" package/daed || true
+
+echo "================================"
 
 echo "✅ 优雅替换完成！"

@@ -188,4 +188,4 @@ echo "CONFIG_DAED_USE_VMLINUX_BTF=n" >> .config
 # 关键：删除 Makefile 外部依赖
 sed -i 's/+DAED_USE_VMLINUX_BTF:vmlinux-btf//g' package/daed/Makefile
 
-echo "✅ DAED 替换完成"
+# echo "✅ DAED 替换完成"

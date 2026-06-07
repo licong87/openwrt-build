@@ -164,28 +164,28 @@ echo "✅ mihomo-alpha 已删除"
 # =========================================================
 # 11. DAED 替换（QiuSimons 稳定版）
 # =========================================================
-# echo "📌 [11/12] 替换 DAED 为 QiuSimons 版本..."
+echo "📌 [11/12] 替换 DAED 为 QiuSimons 版本..."
 
-# ./scripts/feeds uninstall dae
-# ./scripts/feeds uninstall daed
-# ./scripts/feeds uninstall luci-app-dae
-# ./scripts/feeds uninstall luci-app-daed
+./scripts/feeds uninstall dae
+./scripts/feeds uninstall daed
+./scripts/feeds uninstall luci-app-dae
+./scripts/feeds uninstall luci-app-daed
 
-# rm -rf package/temp_daed_repo
-# rm -rf package/daed
-# rm -rf package/luci-app-daed
+rm -rf package/temp_daed_repo
+rm -rf package/daed
+rm -rf package/luci-app-daed
 
-# git clone --depth=1 -b kix https://github.com/QiuSimons/luci-app-daed.git package/temp_daed_repo
+git clone --depth=1 -b kix https://github.com/QiuSimons/luci-app-daed.git package/temp_daed_repo
 
-# mv package/temp_daed_repo/luci-app-daed package/luci-app-daed
-# mv package/temp_daed_repo/daed package/daed
-# rm -rf package/temp_daed_repo
+mv package/temp_daed_repo/luci-app-daed package/luci-app-daed
+mv package/temp_daed_repo/daed package/daed
+rm -rf package/temp_daed_repo
 
 # 关键：关闭外部 BTF
-# sed -i '/CONFIG_DAED_USE_VMLINUX_BTF/d' .config
-# echo "CONFIG_DAED_USE_VMLINUX_BTF=n" >> .config
+sed -i '/CONFIG_DAED_USE_VMLINUX_BTF/d' .config
+echo "CONFIG_DAED_USE_VMLINUX_BTF=n" >> .config
 
 # 关键：删除 Makefile 外部依赖
-# sed -i 's/+DAED_USE_VMLINUX_BTF:vmlinux-btf//g' package/daed/Makefile
+sed -i 's/+DAED_USE_VMLINUX_BTF:vmlinux-btf//g' package/daed/Makefile
 
-# echo "✅ DAED 替换完成"
+echo "✅ DAED 替换完成"

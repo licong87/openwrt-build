@@ -182,10 +182,10 @@ echo "✅ mihomo-alpha 已删除"
 # rm -rf package/temp_daed_repo
 
 # 关键：关闭外部 BTF
-sed -i '/CONFIG_DAED_USE_VMLINUX_BTF/d' .config
-echo "CONFIG_DAED_USE_VMLINUX_BTF=n" >> .config
+# sed -i '/CONFIG_DAED_USE_VMLINUX_BTF/d' .config
+# echo "CONFIG_DAED_USE_VMLINUX_BTF=n" >> .config
 
 # 关键：删除 Makefile 外部依赖
-sed -i 's/+DAED_USE_VMLINUX_BTF:vmlinux-btf//g' package/daed/Makefile
+# sed -i 's/+DAED_USE_VMLINUX_BTF:vmlinux-btf//g' package/daed/Makefile
 
 # echo "✅ DAED 替换完成"

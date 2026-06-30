@@ -3,7 +3,7 @@ name: Auto-Clean
 on:
   #自动清理：每晚11点，默认为utc时间，北京时间需要减去8
   schedule:
-    - cron: 0 15 1/5 * *
+    - cron: '0 15 1/5 * *'
   #手动清理
   workflow_dispatch:
     inputs:
@@ -21,6 +21,10 @@ jobs:
   auto_clean:
     runs-on: ubuntu-latest
     steps:
+      # 👇 新增：必须先 checkout，告诉 gh 命令这是在哪个仓库
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
       - name: Delete Old Releases
         uses: dev-drprasad/delete-older-releases@master
         with:
@@ -32,3 +36,9 @@ jobs:
         with:
           retain_days: 0
           keep_minimum_runs: ${{inputs.NUMBER || '4'}}
+
+      # 👇 新增：清理 GitHub Actions 所有的缓存
+      - name: Delete All Caches
+        run: |
+          echo "正在清理 GitHub 仓库中的所有缓存文件..."
+          gh cache delete --all || echo "未找到现有缓存或清理跳过"

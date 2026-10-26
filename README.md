@@ -15,7 +15,7 @@
 - `.github/workflows/core.yml`：共享的下载、编译与发布流程。
 - `scripts/Packages.sh`：先拉取软件包，再按确切目录替换已有版本；记录自定义包提交。
 - `scripts/Handles.sh`：已有的软件包兼容处理。
-- `scripts/Fixes.sh`：sing-box 版本设置，以及 Nikki、libffi 兼容修复。
+- `scripts/Fixes.sh`：Nikki、libffi 兼容修复；sing-box 保留 feeds 配套版本、补丁和源码哈希。
 - `scripts/Settings.sh`：时区、规则库、面板、NSS 和网口等自定义设置。
 - `config/`：设备编译配置。
 
@@ -23,7 +23,7 @@
 
 x86 首次启动将第一个网络 device 的端口列表设为 `eth0 eth2 eth3`。这是现有四网口 J4125 的专用配置，WAN 沿用源码设置；换设备时应核对网口。
 
-sing-box 仍固定为 1.12.25，并沿用原来的 `PKG_HASH:=skip` 设置。本次没有完成该版本整套软件包定义与哈希的固定。Nikki、mihomo-alpha 和 DAED/BTF 的现有处理保留。软件包分支和数据文件仍随上游变化，并非完全可复现构建。
+sing-box 不再固定 1.12.25，也不再覆盖 PKG_HASH；跟随各源码 feeds 的版本、补丁和依赖一起更新，避免新补丁与旧源码混用。HomeProxy 随 LuCI feeds 更新。Nikki、mihomo-alpha 和 DAED/BTF 的现有处理保留。软件包分支和数据文件仍随上游变化，并非完全可复现构建。
 
 NSS 12.2 设置仅在当前目标为 qualcommax、且源码存在对应选项时注入。首次启动设置上海时区；保留系统配置升级时，应检查已有时区设置。
 
@@ -36,3 +36,11 @@ NSS 12.2 设置仅在当前目标为 qualcommax、且源码存在对应选项时
 自动清理保留至少 14 天内的运行记录，默认保留编译缓存；手动运行 Auto-Clean 时可选择清空缓存。Release 仍按原策略保留最近指定数量。
 
 `patch/0001-fix-upnp.patch` 是历史补丁，目前未被工作流应用。本次保留文件，不自动启用。
+
+## 妙妙屋X 与 HomeProxy 订阅
+
+妙妙屋X 官方文档：https://miaomiaowux.com/docs/generator/
+
+HomeProxy 使用 V2Ray/Base64 节点订阅，可在妙妙屋X 选择 V2Ray 格式（format=v2ray）；不要将完整 Clash YAML 或 sing-box JSON 配置当作 HomeProxy 节点订阅。订阅令牌不应写入此公开仓库。
+
+当前 HomeProxy 订阅解析器支持 ss:// 和 SS2022 加密方法；sing-box 官方也支持 Shadowsocks AEAD 2022。平台支持不等于已经验证了个人节点，固件首次使用时需实际检查导入、配置校验和连通性。

@@ -37,10 +37,4 @@ NSS 12.2 设置仅在当前目标为 qualcommax、且源码存在对应选项时
 
 `patch/0001-fix-upnp.patch` 是历史补丁，目前未被工作流应用。本次保留文件，不自动启用。
 
-## 妙妙屋X 与 HomeProxy 订阅
 
-妙妙屋X 官方文档：https://miaomiaowux.com/docs/generator/
-
-HomeProxy 使用 V2Ray/Base64 节点订阅，可在妙妙屋X 选择 V2Ray 格式（format=v2ray）；不要将完整 Clash YAML 或 sing-box JSON 配置当作 HomeProxy 节点订阅。订阅令牌不应写入此公开仓库。
-
-当前 HomeProxy 订阅解析器支持 ss:// 和 SS2022 加密方法；sing-box 官方也支持 Shadowsocks AEAD 2022。平台支持不等于已经验证了个人节点，固件首次使用时需实际检查导入、配置校验和连通性。

@@ -1,0 +1,36 @@
+#!/bin/sh
+# J4125 四网口布局：eth0/eth2/eth3 为 LAN；保留 WAN/WAN6 配置。
+# 新文件名确保从含旧版首次启动脚本的固件升级后也会执行。
+
+[ "$(uci -q get network.lan)" = interface ] || exit 1
+bridge=$(uci -q show network | sed -n "s/^\(network\.[^.]*\)\.name='br-lan'$/\1/p" | head -n 1)
+if [ -z "$bridge" ]; then
+    bridge="network.$(uci add network device)" || exit 1
+    uci set "$bridge.name=br-lan" || exit 1
+fi
+[ "$(uci -q get "$bridge")" = device ] || exit 1
+uci set "$bridge.type=bridge" || exit 1
+
+wan=$(uci -q get network.wan.device || uci -q get network.wan.ifname || true)
+wan6=$(uci -q get network.wan6.device || uci -q get network.wan6.ifname || true)
+for port in eth0 eth2 eth3; do
+    if [ "$port" = "$wan" ] || [ "$port" = "$wan6" ]; then
+        logger -t j4125-lan "跳过 WAN 使用的端口 $port"
+        continue
+    fi
+    if ! ip link show dev "$port" >/dev/null 2>&1; then
+        logger -t j4125-lan "端口 $port 不存在，跳过"
+        continue
+    fi
+    uci -q del_list "$bridge.ports=$port" || true
+    uci add_list "$bridge.ports=$port" || exit 1
+done
+# eth1 为这台 J4125 的 WAN，不允许加入 LAN 网桥。
+uci -q del_list "$bridge.ports=eth1" || true
+uci set network.lan.device=br-lan || exit 1
+# 兼容旧网络配置；保留 LAN 地址、DHCP 及 WAN/WAN6 设置。
+uci -q delete network.lan.ifname || true
+uci -q delete network.lan.type || true
+uci commit network || exit 1
+logger -t j4125-lan '已将存在且未被 WAN 占用的 eth0/eth2/eth3 加入 br-lan'
+exit 0

@@ -128,27 +128,15 @@ echo "✅ Dashboard 安装完成"
 # =========================================================
 echo "📌 [7/9] x86 网口绑定配置..."
 
-if [ -d "openwrt" ]; then
-    WRT_DIR="openwrt"
-else
-    WRT_DIR="."
+if grep -qx "CONFIG_TARGET_x86=y" .config; then
+    mkdir -p files/etc/uci-defaults
+    # 资源路径按脚本位置解析，避免依赖当前目录。
+    customization_root=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
+    cp "$customization_root/files/x86/99-j4125-lan-ports-v2" \
+       files/etc/uci-defaults/99-j4125-lan-ports-v2
+    chmod +x files/etc/uci-defaults/99-j4125-lan-ports-v2
+    echo "✅ J4125 LAN 自动桥接配置已注入"
 fi
-
-if grep -q "CONFIG_TARGET_x86=y" ${WRT_DIR}/.config; then
-    mkdir -p ${WRT_DIR}/files/etc/uci-defaults
-
-    cat << "EOF" > ${WRT_DIR}/files/etc/uci-defaults/99-custom-lan-ports
-#!/bin/sh
-uci set network.@device[0].ports='eth0 eth2 eth3'
-uci commit network
-exit 0
-EOF
-
-    chmod +x ${WRT_DIR}/files/etc/uci-defaults/99-custom-lan-ports
-
-    echo "✅ x86 LAN 绑定已注入"
-fi
-
 
 # =========================================================
 # 8. ZeroTier 菜单修复

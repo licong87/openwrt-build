@@ -1,23 +1,52 @@
 #!/bin/bash
 
-#安装和更新软件包
+set -euo pipefail
+
+# 工作目录必须是源码的 package；先在同一文件系统下载，再替换旧包。
+[[ -d ../feeds/packages && -d ../feeds/luci ]] || { echo "错误：请在源码 package 目录运行" >&2; exit 1; }
+package_tmp=$(mktemp -d .package-update.XXXXXX)
+trap 'rm -rf "$package_tmp"' EXIT
+
 UPDATE_PACKAGE() {
-	local PKG_NAME=$1
-	local PKG_REPO=$2
-	local PKG_BRANCH=$3
-	local PKG_SPECIAL=$4
-	local REPO_NAME=$(echo $PKG_REPO | cut -d '/' -f 2)
+    local name=$1 repository=$2 branch=$3 mode=${4:-}
+    local repo_name=${repository##*/}
+    local staging="$package_tmp/$repo_name"
+    local extracted_name=$name
+    [[ "$name" != openclash ]] || extracted_name=luci-app-openclash
+    local package_name candidate target
+    local -a candidates=()
 
-	rm -rf $(find ./ ../feeds/luci/ ../feeds/packages/ -maxdepth 3 -type d -iname "*$PKG_NAME*" -prune)
+    git clone --depth=1 --single-branch --branch "$branch" \
+        "https://github.com/$repository.git" "$staging"
+    if [[ "$mode" == pkg ]]; then
+        while IFS= read -r -d '' candidate; do
+            candidates+=("$candidate")
+        done < <(find "$staging" -mindepth 1 -maxdepth 4 -type d -name "$extracted_name" -print0)
+        [[ ${#candidates[@]} == 1 && -f "${candidates[0]}/Makefile" ]] || {
+            echo "错误：$repository 中未找到唯一有效的 $name" >&2; return 1;
+        }
+        # OpenClash 对应的真实目录名为 luci-app-openclash。
+    else
+        candidates=("$staging")
+    fi
 
-	git clone --depth=1 --single-branch --branch $PKG_BRANCH "https://github.com/$PKG_REPO.git"
+    [[ -n "$(find "${candidates[0]}" -maxdepth 2 -type f -name Makefile -print -quit)" ]] || {
+        echo "错误：$repository 中没有可用的软件包 Makefile" >&2; return 1;
+    }
+    # 根据下载内容中真实的包目录名替换，避免 *argon* 等模糊匹配。
+    while IFS= read -r -d '' candidate; do
+        package_name=$(basename "$(dirname "$candidate")")
+        for target in "./$package_name" "../feeds/luci/themes/$package_name" \
+            "../feeds/luci/applications/$package_name" "../feeds/packages/net/$package_name"; do
+            [[ ! -e "$target" && ! -L "$target" ]] || rm -rf -- "$target"
+        done
+    done < <(find "${candidates[0]}" -maxdepth 2 -type f -name Makefile -print0)
 
-	if [[ $PKG_SPECIAL == "pkg" ]]; then
-		cp -rf $(find ./$REPO_NAME/*/ -maxdepth 3 -type d -iname "*$PKG_NAME*" -prune) ./
-		rm -rf ./$REPO_NAME/
-	elif [[ $PKG_SPECIAL == "name" ]]; then
-		mv -f $REPO_NAME $PKG_NAME
-	fi
+    printf '%s %s\n' "$repository" "$(git -C "$staging" rev-parse HEAD)" >> ../custom-package-revisions.txt
+    target=$repo_name
+    [[ "$mode" != pkg && "$mode" != name ]] || target=$name
+    rm -rf -- "./$target"
+    mv -- "${candidates[0]}" "./$target"
 }
 
 UPDATE_PACKAGE "argon" "jerrykuku/luci-theme-argon" "master"
@@ -47,43 +76,3 @@ UPDATE_PACKAGE "openclash" "vernesong/OpenClash" "dev" "pkg"
 
 # UPDATE_PACKAGE "luci-app-pushbot" "zzsj0928/luci-app-pushbot" "master"
 # UPDATE_PACKAGE "luci-app-lucky" "sirpdboy/luci-app-lucky" "main"
-
-#更新软件包版本
-UPDATE_VERSION() {
-	local PKG_NAME=$1
-	local PKG_MARK=${2:-not}
-	local PKG_FILES=$(find ./ ../feeds/packages/ -maxdepth 3 -type f -wholename "*/$PKG_NAME/Makefile")
-
-	echo " "
-
-	if [ -z "$PKG_FILES" ]; then
-		echo "$PKG_NAME not found!"
-		return
-	fi
-
-	echo "$PKG_NAME version update has started!"
-
-	for PKG_FILE in $PKG_FILES; do
-		local PKG_REPO=$(grep -Pho 'PKG_SOURCE_URL:=https://.*github.com/\K[^/]+/[^/]+(?=.*)' $PKG_FILE | head -n 1)
-		local PKG_VER=$(curl -sL "https://api.github.com/repos/$PKG_REPO/releases" | jq -r "map(select(.prerelease|$PKG_MARK)) | first | .tag_name")
-		local NEW_VER=$(echo $PKG_VER | sed "s/.*v//g; s/_/./g")
-		local NEW_HASH=$(curl -sL "https://codeload.github.com/$PKG_REPO/tar.gz/$PKG_VER" | sha256sum | cut -b -64)
-		local OLD_VER=$(grep -Po "PKG_VERSION:=\K.*" "$PKG_FILE")
-
-		echo "$OLD_VER $PKG_VER $NEW_VER $NEW_HASH"
-
-		if [[ $NEW_VER =~ ^[0-9].* ]] && dpkg --compare-versions "$OLD_VER" lt "$NEW_VER"; then
-			sed -i "s/PKG_VERSION:=.*/PKG_VERSION:=$NEW_VER/g" "$PKG_FILE"
-			sed -i "s/PKG_HASH:=.*/PKG_HASH:=$NEW_HASH/g" "$PKG_FILE"
-			echo "$PKG_FILE version has been updated!"
-		else
-			echo "$PKG_FILE version is already the latest!"
-		fi
-	done
-}
-
-#UPDATE_VERSION "软件包名" "测试版，true，可选，默认为否"
-# 御三家底层核心引擎：强制追新 (同步最新协议与性能优化)
-# UPDATE_VERSION "sing-box"  （1.2.4最好用）
-# UPDATE_VERSION "mihomo"
-# UPDATE_VERSION "dae"

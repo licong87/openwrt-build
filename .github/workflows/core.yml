@@ -15,9 +15,6 @@ on:
       REPO_BRANCH:
         required: true
         type: string
-      FEEDS_CONF:
-        required: true
-        type: string
       CONFIG_FILE:
         required: true
         type: string
@@ -27,7 +24,6 @@ env:
   REPO_SOURCE: ${{inputs.REPO_SOURCE}}
   REPO_URL: ${{inputs.REPO_URL}}
   REPO_BRANCH: ${{inputs.REPO_BRANCH}}
-  FEEDS_CONF: ${{inputs.FEEDS_CONF}}
   CONFIG_FILE: ${{inputs.CONFIG_FILE}}
   TZ: Asia/Shanghai
 
@@ -53,7 +49,7 @@ jobs:
           swap-storage: true
 
       - name: Checkout
-        uses: actions/checkout@v3.1.0
+        uses: actions/checkout@v4
 
       - name: Initialization environment
         env:
@@ -66,7 +62,8 @@ jobs:
           sudo -E apt -yqq autoclean
           sudo -E apt -yqq clean
           sudo -E apt -yqq install dos2unix libfuse-dev          
-          sudo bash -c 'bash <(curl -s https://build-scripts.immortalwrt.org/init_build_environment.sh)'
+          curl -fL --retry 3 https://build-scripts.immortalwrt.org/init_build_environment.sh -o "$RUNNER_TEMP/init-build.sh"
+          sudo bash "$RUNNER_TEMP/init-build.sh"
           sudo timedatectl set-timezone "$TZ"
           git config --global user.email "aa@163.com"
           git config --global user.name "aa"
@@ -87,7 +84,7 @@ jobs:
         uses: stupidloud/cachewrtbuild@main
         with:
           ccache: true
-          mixkey: ${{env.REPO_SOURCE}}-${{env.REPO_BRANCH}}-${{env.WRT_HASH}}
+          mixkey: ${{env.TARGET}}-${{env.REPO_SOURCE}}-${{env.REPO_BRANCH}}-${{env.WRT_HASH}}-${{ hashFiles(inputs.CONFIG_FILE) }}
           prefix: ${{ env.OPENWRT_PATH }}
 
       - name: Update Feeds
@@ -99,38 +96,29 @@ jobs:
 
       - name: Check Scripts
         run: |
-          find ./ -maxdepth 3 -type f -iregex ".*\(txt\|sh\)$" -exec dos2unix {} \; -exec chmod +x {} \;
+          dos2unix "$GITHUB_WORKSPACE"/scripts/*.sh
+          bash -n "$GITHUB_WORKSPACE/scripts/Packages.sh"
+          bash -n "$GITHUB_WORKSPACE/scripts/Handles.sh"
+          bash -n "$GITHUB_WORKSPACE/scripts/Fixes.sh"
+          bash -n "$GITHUB_WORKSPACE/scripts/Settings.sh"
 
       - name: Custom Packages
         run: |
           cd ./openwrt/package/
-          $GITHUB_WORKSPACE/scripts/Packages.sh
-          $GITHUB_WORKSPACE/scripts/Handles.sh
+          : > ../custom-package-revisions.txt
+          bash "$GITHUB_WORKSPACE/scripts/Packages.sh"
+          bash "$GITHUB_WORKSPACE/scripts/Handles.sh"
+          cd ..
+          ./scripts/feeds install -a
 
       - name: Custom Settings
         run: |
-          [ -e $CONFIG_FILE ] && mv $CONFIG_FILE openwrt/.config
+          test -f "$CONFIG_FILE"
+          cp "$CONFIG_FILE" openwrt/.config
           
-          sed -i 's/PKG_VERSION:=.*/PKG_VERSION:=1.12.25/g' openwrt/feeds/packages/net/sing-box/Makefile
-          sed -i 's/PKG_HASH:=.*/PKG_HASH:=skip/g' openwrt/feeds/packages/net/sing-box/Makefile
-          
-          # 修复 nikki 编译时尝试拷贝不存在的 Go 源码而报错的问题
-          sed -i '/eval.*BuildPackage/i define Build/InstallDev\nendef\n' openwrt/package/OpenWrt-nikki/nikki/Makefile
-          
-          # 兼容不同源码的 libffi 路径
-          for libffi_makefile in \
-            openwrt/package/libs/libffi/Makefile \
-            openwrt/feeds/packages/libs/libffi/Makefile
-          do
-            if [ -f "$libffi_makefile" ]; then
-              sed -i 's#$(PKG_BUILD_DIR)/$(GNU_TARGET_NAME)\*/fficonfig.h#$(PKG_BUILD_DIR)/*/fficonfig.h#g' \
-                "$libffi_makefile"
-            fi
-          done
-          
-          dos2unix $GITHUB_WORKSPACE/scripts/Settings.sh
+          bash "$GITHUB_WORKSPACE/scripts/Fixes.sh"
           cd ./openwrt
-          bash $GITHUB_WORKSPACE/scripts/Settings.sh   
+          bash "$GITHUB_WORKSPACE/scripts/Settings.sh"
 
       - name: Download package
         id: package
@@ -138,15 +126,13 @@ jobs:
           cd openwrt
           make defconfig
           make download -j8
-          find dl -size -1024c -exec ls -l {} \;
-          find dl -size -1024c -exec rm -f {} \;
 
       - name: Compile the firmware
         id: compile
         run: |
           cd openwrt
           echo -e "$(nproc) thread compile"
-          make -j$(nproc) || make -j1 || make -j1 V=s
+          make -j"$(nproc)" || make -j1 V=s
           echo "status=success" >> $GITHUB_OUTPUT
           echo "DATE=$(date +"%Y-%m-%d %H:%M:%S")" >> $GITHUB_ENV
           echo "FILE_DATE=$(date +"%Y.%m.%d")" >> $GITHUB_ENV          
@@ -157,12 +143,23 @@ jobs:
         run: |
           cd openwrt/bin/targets/*/*
 
-          for file in *.img.gz *.img *.vmdk *.qcow2 *.efi.img.gz; do
-            [ -f "$file" ] || continue
-            mv "$file" "${TARGET}_${FILE_DATE}_$file"
-          done
-
+          # 保留上游镜像名，使 profiles.json 等清单的引用保持有效。
           rm -rf packages
+          cp "$GITHUB_WORKSPACE/openwrt/.config" build.config
+          (cd "$GITHUB_WORKSPACE/openwrt" && ./scripts/diffconfig.sh) > build.diffconfig
+          {
+            printf 'build-config: %s\n' "$(git -C "$GITHUB_WORKSPACE" rev-parse HEAD)"
+            printf 'source: %s\n' "$(git -C "$GITHUB_WORKSPACE/openwrt" rev-parse HEAD)"
+            for feed in "$GITHUB_WORKSPACE/openwrt"/feeds/*; do
+              if [ -d "$feed/.git" ] || [ -f "$feed/.git" ]; then
+                printf '%s: %s\n' "$(basename "$feed")" "$(git -C "$feed" rev-parse HEAD)"
+              fi
+            done
+            cat "$GITHUB_WORKSPACE/openwrt/custom-package-revisions.txt"
+          } > build-revisions.txt
+          # 重新生成校验清单，包含构建记录。
+          find . -maxdepth 1 -type f ! -name sha256sums -print0 | sort -z | xargs -0 -r sha256sum > sha256sums
+          sha256sum -c sha256sums
           echo "FIRMWARE=$PWD" >> $GITHUB_ENV
           echo "status=success" >> $GITHUB_OUTPUT
 
@@ -173,21 +170,20 @@ jobs:
           cd openwrt
           echo "PLUGIN_BODY<<EOF" >> $GITHUB_ENV
           echo "### 📦 已集成的核心插件列表：" >> $GITHUB_ENV
-          grep "CONFIG_PACKAGE_luci-app-" .config | grep "=y" | cut -d'=' -f1 | sed 's/CONFIG_PACKAGE_//g' >> $GITHUB_ENV
+          awk -F= '/^CONFIG_PACKAGE_luci-app-.*=y$/ {sub(/^CONFIG_PACKAGE_/, "", $1); print $1}' .config >> "$GITHUB_ENV"
           echo "EOF" >> $GITHUB_ENV
 
       - name: Release Firmware
         uses: softprops/action-gh-release@v2.1.0
         if: steps.compile.outputs.status == 'success' && !cancelled()
         with:
-          tag_name: ${{ env.TARGET }}_${{ env.FILE_DATE }}
+          tag_name: ${{ env.TARGET }}_${{ env.FILE_DATE }}_${{ github.run_number }}_${{ github.run_attempt }}
           files: ${{ env.FIRMWARE }}/*
           body: |
             🌐 **【设备默认信息】**
             后台地址：`192.168.1.1`
             默认密码：无 (留空直接登录)
-            默认 WIFI：`${{ env.REPO_SOURCE }}`  
-            WIFI 密码：无
+            Wi-Fi 配置：以设备与源码默认设置为准；nowifi 构建不包含无线功能。
 
             ⚙️ **【编译核心参数】**
             编译平台：${{ env.TARGET }}

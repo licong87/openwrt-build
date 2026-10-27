@@ -65,3 +65,5 @@ Nikki 开启 IPv6 DNS 与 IPv6 DNS 劫持后，查询可能不经过 dnsmasq；�
 
 
 Release 标题及发布文件名包含北京时间戳（年月日_时分秒）；profiles.json 与 sha256sums 保持引用和校验一致。
+
+ZeroTier 全局默认保持关闭；监听端口为 9993，本地配置文件路径为 `/etc/zerotier.conf`，持久配置目录为 `/etc/zerotier`，允许入站，不启用复制配置目录。首次启用时由设备生成密钥。

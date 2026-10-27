@@ -138,9 +138,9 @@ if grep -qx "CONFIG_TARGET_x86=y" .config; then
     echo "✅ J4125 LAN 自动桥接配置已注入"
 
     if [[ "${REPO_SOURCE:-}" == "immortalwrt" ]]; then
-        cp "$customization_root/files/x86/98-immortalwrt-pppoe-ipv6" \
-           files/etc/uci-defaults/98-immortalwrt-pppoe-ipv6
-        chmod +x files/etc/uci-defaults/98-immortalwrt-pppoe-ipv6
+        cp "$customization_root/files/x86/98-immortalwrt-pppoe-ipv6-v2" \
+           files/etc/uci-defaults/98-immortalwrt-pppoe-ipv6-v2
+        chmod +x files/etc/uci-defaults/98-immortalwrt-pppoe-ipv6-v2
         echo "✅ ImmortalWrt PPPoE IPv6 主路由默认配置已注入"
     fi
 fi

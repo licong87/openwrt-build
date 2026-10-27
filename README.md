@@ -29,7 +29,7 @@ NSS 12.2 设置仅在当前目标为 qualcommax、且源码存在对应选项时
 
 ## ImmortalWrt x86 的 PPPoE IPv6 默认值
 
-仅对 ImmortalWrt x86 注入 `files/x86/98-immortalwrt-pppoe-ipv6`，适用于桥接光猫、OpenWrt 主路由 PPPoE 拨号且运营商提供 IPv6-PD 的环境。首次启动或保留配置升级后执行一次，会设置 WAN IPv6 自动获取及前缀委托、LAN /64 与 EUI-64 后缀、RA/SLAAC、允许 AAAA 查询；停用 LAN DHCPv6、NDP 代理及 RA IPv6 DNS 通告。客户端通过 IPv4 获取 DNS 时仍可解析 AAAA；不保证 IPv6-only 客户端或使用自定义 DNS 的客户端采用同一解析路径。
+仅对 ImmortalWrt x86 注入 `files/x86/98-immortalwrt-pppoe-ipv6-v2`，适用于桥接光猫、OpenWrt 主路由 PPPoE 拨号且运营商提供 IPv6-PD 的环境。首次启动或保留配置升级后执行一次，会设置 WAN IPv6 自动获取及前缀委托、LAN /64 与 EUI-64 后缀、RA/SLAAC、过滤 AAAA 查询；停用 LAN DHCPv6、NDP 代理及 RA IPv6 DNS 通告。经 dnsmasq 查询时 IPv6 域名解析会被过滤，可能影响仅支持 IPv6 的域名；OpenClash、加密 DNS 和使用其他 DNS 的客户端可能绕过此过滤。
 
 脚本不会设置 WAN 协议、账号密码、LAN IPv4 或防火墙。仅当独立 `wan6` 是 DHCPv6 且直接绑定和 WAN 相同的物理设备时，设为不自动启动，避免与 PPPoE 的动态 `wan_6` 并存；自定义接口不改。已有个性化 IPv6 配置会被本脚本的上述设置覆盖，请备份。光猫桥接及公网 IPv6-PD 由运营商提供，编译固件本身无法保证。
 

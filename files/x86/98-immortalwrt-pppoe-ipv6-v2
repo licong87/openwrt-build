@@ -11,6 +11,7 @@
 uci set network.wan.ipv6='auto' || exit 1
 uci set network.wan.delegate='1' || exit 1
 uci -q delete network.wan.ip6assign || true
+uci set network.lan.delegate='0' || exit 1
 uci set network.lan.ip6assign='64' || exit 1
 uci set network.lan.ip6ifaceid='eui64' || exit 1
 

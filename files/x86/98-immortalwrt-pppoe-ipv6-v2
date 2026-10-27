@@ -1,5 +1,5 @@
 #!/bin/sh
-# ImmortalWrt x86 主路由：PPPoE 自动 DHCPv6-PD，LAN 使用 SLAAC。
+# ImmortalWrt / LibWrt x86 主路由：PPPoE 自动 DHCPv6-PD，LAN 使用 SLAAC。
 # 不更改 WAN 协议、拨号账号密码、IPv4 地址或防火墙。
 
 [ "$(uci -q get network.wan)" = interface ] || exit 1

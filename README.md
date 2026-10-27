@@ -27,19 +27,19 @@ sing-box 不再固定 1.12.25，也不再覆盖 PKG_HASH；跟随各源码 feeds
 
 NSS 12.2 设置仅在当前目标为 qualcommax、且源码存在对应选项时注入。首次启动设置上海时区；保留系统配置升级时，应检查已有时区设置。
 
-## ImmortalWrt x86 的 PPPoE IPv6 默认值
+## x86 的 PPPoE IPv6 默认值
 
-仅对 ImmortalWrt x86 注入 `files/x86/98-immortalwrt-pppoe-ipv6-v2`，适用于桥接光猫、OpenWrt 主路由 PPPoE 拨号且运营商提供 IPv6-PD 的环境。首次启动或保留配置升级后执行一次，会设置 WAN IPv6 自动获取及前缀委托、LAN /64 与 EUI-64 后缀、RA/SLAAC、过滤 AAAA 查询；停用 LAN DHCPv6、NDP 代理及 RA IPv6 DNS 通告。经 dnsmasq 查询时 IPv6 域名解析会被过滤，可能影响仅支持 IPv6 的域名；OpenClash、加密 DNS 和使用其他 DNS 的客户端可能绕过此过滤。
+ImmortalWrt 和 LibWrt x86 均注入 `files/x86/98-immortalwrt-pppoe-ipv6-v2`，适用于桥接光猫、OpenWrt 主路由 PPPoE 拨号且运营商提供 IPv6-PD 的环境。首次启动或保留配置升级后执行一次，会设置 WAN IPv6 自动获取及前缀委托、LAN /64 与 EUI-64 后缀、RA/SLAAC、过滤 AAAA 查询；停用 LAN DHCPv6、NDP 代理及 RA IPv6 DNS 通告。经 dnsmasq 查询时 IPv6 域名解析会被过滤，可能影响仅支持 IPv6 的域名；OpenClash、加密 DNS 和使用其他 DNS 的客户端可能绕过此过滤。
 
 脚本不会设置 WAN 协议、账号密码、LAN IPv4 或防火墙。仅当独立 `wan6` 是 DHCPv6 且直接绑定和 WAN 相同的物理设备时，设为不自动启动，避免与 PPPoE 的动态 `wan_6` 并存；自定义接口不改。已有个性化 IPv6 配置会被本脚本的上述设置覆盖，请备份。光猫桥接及公网 IPv6-PD 由运营商提供，编译固件本身无法保证。
 
 ## ZeroTier 网络默认选项
 
-仅 ImmortalWrt x86 的全新固件预设 ZeroTier 网络复选框：启用、允许管理 IP/路由、允许入站、允许转发、IP 动态伪装。示例网络的 ID 留空；新增网络也默认勾选上述选项。全局服务开关仍需用户自行启用，现有 ZeroTier 配置不会在保留配置升级时强行更改。
+ImmortalWrt 和 LibWrt x86 的全新固件预设 ZeroTier 网络复选框：启用、允许管理 IP/路由、允许入站、允许转发、IP 动态伪装。示例网络的 ID 留空；新增网络也默认勾选上述选项。全局服务开关仍需用户自行启用，现有 ZeroTier 配置不会在保留配置升级时强行更改。
 
 转发接口与伪装接口不预设。插件中留空表示所有接口，如需限于 LAN，请在这两项选择 `br-lan` 后保存。允许入站、转发和伪装会改变 ZeroTier 网络可访问的范围，请确认加入可信网络并在控制端授权设备。
 
-## ImmortalWrt x86 的 Nikki 默认值
+## x86 的 Nikki 默认值
 
 固件编译时基于 Nikki 上游配置设置 20 秒启动延迟、TCP/UDP TUN、IPv4/IPv6 绕过中国大陆地址、统一延迟和 TCP 并发，并保留 IPv6 DNS、IPv6 流量接管和 IPv6 DNS 劫持。具体是否生效还受 Nikki 订阅配置及其覆写开关影响。
 
@@ -47,9 +47,9 @@ NSS 12.2 设置仅在当前目标为 qualcommax、且源码存在对应选项时
 
 Nikki 开启 IPv6 DNS 与 IPv6 DNS 劫持后，查询可能不经过 dnsmasq；固件中设置的 dnsmasq AAAA 过滤不保证控制 Nikki 或其他独立 DNS 的解析结果。
 
-## ImmortalWrt x86 的 Vlmcsd 与 UPnP 默认值
+## x86 的 Vlmcsd 与 UPnP 默认值
 
-全新固件默认启用 Vlmcsd 和客户端自动发现；互联网访问保持关闭。UPnP 默认启用服务、UPnP IGD、PCP/NAT-PMP、允许私有 IPv4 和 IGDv1 兼容模式。带宽数字、访问控制规则、安全模式及其他选项保持源码默认值。UPnP 允许局域网设备按规则请求端口映射；实际公网连通性取决于上游网络。
+全新固件默认启用 Vlmcsd 和客户端自动发现；互联网访问保持关闭。UPnP 默认启用服务、UPnP IGD、PCP/NAT-PMP、允许私有 IPv4 和 IGDv1 兼容模式。LibWrt 25.12 使用“强制转发”实现同一私有 IPv4 功能，选项位于 UPnP 高级设置；带宽数字、访问控制规则、安全模式及其他选项保持源码默认值。UPnP 允许局域网设备按规则请求端口映射；实际公网连通性取决于上游网络。
 
 这些设置作用于软件包初始配置；保留配置升级时，已有 Vlmcsd/UPnP 配置不会被强制覆盖。
 

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Set non-secret Nikki defaults for ImmortalWrt x86 firmware builds."""
+"""Set non-secret Nikki defaults for ImmortalWrt and LibWrt x86 firmware builds."""
 import re
 import sys
 from pathlib import Path

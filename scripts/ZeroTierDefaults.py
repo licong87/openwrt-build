@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Preset only the ZeroTier network checkboxes in ImmortalWrt x86 builds."""
+"""Preset only the ZeroTier network checkboxes in ImmortalWrt and LibWrt x86 builds."""
 import re
 import sys
 from pathlib import Path

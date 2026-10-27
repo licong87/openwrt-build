@@ -144,6 +144,8 @@ if grep -qx "CONFIG_TARGET_x86=y" .config; then
         echo "✅ ImmortalWrt PPPoE IPv6 主路由默认配置已注入"
         python3 "$customization_root/scripts/ZeroTierDefaults.py" "$PWD"
         echo "✅ ZeroTier 网络复选框默认值已设置"
+        python3 "$customization_root/scripts/NikkiDefaults.py" "$PWD"
+        echo "✅ Nikki 非敏感默认选项已设置"
     fi
 fi
 

@@ -102,6 +102,7 @@ jobs:
           bash -n "$GITHUB_WORKSPACE/scripts/Fixes.sh"
           bash -n "$GITHUB_WORKSPACE/scripts/Settings.sh"
           python3 -c 'import ast, pathlib, sys; ast.parse(pathlib.Path(sys.argv[1]).read_text())' "$GITHUB_WORKSPACE/scripts/ZeroTierDefaults.py"
+          python3 -c 'import ast, pathlib, sys; ast.parse(pathlib.Path(sys.argv[1]).read_text())' "$GITHUB_WORKSPACE/scripts/NikkiDefaults.py"
           sh -n "$GITHUB_WORKSPACE/files/x86/99-j4125-lan-ports-v2"
           sh -n "$GITHUB_WORKSPACE/files/x86/98-immortalwrt-pppoe-ipv6-v2"
 

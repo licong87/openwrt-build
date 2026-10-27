@@ -1,12 +1,11 @@
 # OpenWrt 云编译
 
-支持 J4125 等 x86 设备、兆能 M2 和京东云亚瑟。
+支持 J4125 等 x86 设备。兆能 M2 和京东云亚瑟等 ARM 构建已迁移至 [openwrt-build-arm](https://github.com/licong87/openwrt-build-arm)。
 
 | 工作流 | 源码 | 分支 | 配置 |
 | --- | --- | --- | --- |
 | x86-imm | immortalwrt/immortalwrt | master | config/x86.config |
 | x86-libWrt | LiBwrt/openwrt-6.x | 25.12-nss | config/x86.config |
-| ipq60xx-libWrt | LiBwrt/openwrt-6.x | 25.12-nss | config/arm 下的三个设备配置 |
 
 在 Actions 选择对应工作流，点击 Run workflow，并选择 main。修改配置后请创建新运行；重跑旧任务仍使用旧提交。
 
@@ -29,7 +28,7 @@ NSS 12.2 设置仅在当前目标为 qualcommax、且源码存在对应选项时
 
 ## x86 的 PPPoE IPv6 默认值
 
-ImmortalWrt 和 LibWrt x86 均注入 `files/x86/98-immortalwrt-pppoe-ipv6-v2`，适用于桥接光猫、OpenWrt 主路由 PPPoE 拨号且运营商提供 IPv6-PD 的环境。首次启动或保留配置升级后执行一次，会设置 WAN IPv6 自动获取及前缀委托、LAN /64 与 EUI-64 后缀、RA/SLAAC、过滤 AAAA 查询；停用 LAN DHCPv6、NDP 代理及 RA IPv6 DNS 通告。经 dnsmasq 查询时 IPv6 域名解析会被过滤，可能影响仅支持 IPv6 的域名；OpenClash、加密 DNS 和使用其他 DNS 的客户端可能绕过此过滤。
+ImmortalWrt 和 LibWrt x86 均注入 `files/x86/98-immortalwrt-pppoe-ipv6-v2`，适用于桥接光猫、OpenWrt 主路由 PPPoE 拨号且运营商提供 IPv6-PD 的环境。首次启动或保留配置升级后执行一次，会设置 WAN IPv6 自动获取及前缀委托、LAN /64、关闭 LAN 前缀委派与 EUI-64 后缀、RA/SLAAC、过滤 AAAA 查询；停用 LAN DHCPv6、NDP 代理及 RA IPv6 DNS 通告。经 dnsmasq 查询时 IPv6 域名解析会被过滤，可能影响仅支持 IPv6 的域名；OpenClash、加密 DNS 和使用其他 DNS 的客户端可能绕过此过滤。
 
 脚本不会设置 WAN 协议、账号密码、LAN IPv4 或防火墙。仅当独立 `wan6` 是 DHCPv6 且直接绑定和 WAN 相同的物理设备时，设为不自动启动，避免与 PPPoE 的动态 `wan_6` 并存；自定义接口不改。已有个性化 IPv6 配置会被本脚本的上述设置覆盖，请备份。光猫桥接及公网 IPv6-PD 由运营商提供，编译固件本身无法保证。
 
@@ -43,7 +42,7 @@ ImmortalWrt 和 LibWrt x86 的全新固件预设 ZeroTier 网络复选框：启�
 
 固件编译时基于 Nikki 上游配置设置 20 秒启动延迟、TCP/UDP TUN、IPv4/IPv6 绕过中国大陆地址、统一延迟和 TCP 并发，并保留 IPv6 DNS、IPv6 流量接管和 IPv6 DNS 劫持。具体是否生效还受 Nikki 订阅配置及其覆写开关影响。
 
-不打包用户的订阅地址、节点、配置文件名、API 密钥或认证密码；Nikki 主开关保留上游默认关闭，需用户选择自己的配置并启用。首次安装保留上游独立生成访问凭据的机制；保留配置升级不强制改已有 Nikki 设置。
+不打包用户的订阅地址、节点或配置文件名；Nikki 主开关保留上游默认关闭，需用户选择自己的配置并启用。新固件 API 密码默认为 `123456`，代理认证密码仍由上游生成；保留配置升级不强制改已有 Nikki 设置。请勿将弱密码保护的 API 端口开放到公网。
 
 Nikki 开启 IPv6 DNS 与 IPv6 DNS 劫持后，查询可能不经过 dnsmasq；固件中设置的 dnsmasq AAAA 过滤不保证控制 Nikki 或其他独立 DNS 的解析结果。
 

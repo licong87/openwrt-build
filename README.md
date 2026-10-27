@@ -47,6 +47,12 @@ NSS 12.2 设置仅在当前目标为 qualcommax、且源码存在对应选项时
 
 Nikki 开启 IPv6 DNS 与 IPv6 DNS 劫持后，查询可能不经过 dnsmasq；固件中设置的 dnsmasq AAAA 过滤不保证控制 Nikki 或其他独立 DNS 的解析结果。
 
+## ImmortalWrt x86 的 Vlmcsd 与 UPnP 默认值
+
+全新固件默认启用 Vlmcsd 和客户端自动发现；互联网访问保持关闭。UPnP 默认启用服务、UPnP IGD、PCP/NAT-PMP、允许私有 IPv4 和 IGDv1 兼容模式。带宽数字、访问控制规则、安全模式及其他选项保持源码默认值。UPnP 允许局域网设备按规则请求端口映射；实际公网连通性取决于上游网络。
+
+这些设置作用于软件包初始配置；保留配置升级时，已有 Vlmcsd/UPnP 配置不会被强制覆盖。
+
 ## 发布与排查
 
 镜像保留上游文件名，使清单引用保持一致。Release 标签包含设备、日期、运行编号和尝试次数，避免同日重编混用产物。附件包含 `build.config`、`build.diffconfig`、`build-revisions.txt` 和重新生成的 `sha256sums`。

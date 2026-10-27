@@ -142,6 +142,8 @@ if grep -qx "CONFIG_TARGET_x86=y" .config; then
            files/etc/uci-defaults/98-immortalwrt-pppoe-ipv6-v2
         chmod +x files/etc/uci-defaults/98-immortalwrt-pppoe-ipv6-v2
         echo "✅ ImmortalWrt PPPoE IPv6 主路由默认配置已注入"
+        python3 "$customization_root/scripts/ZeroTierDefaults.py" "$PWD"
+        echo "✅ ZeroTier 网络复选框默认值已设置"
     fi
 fi
 

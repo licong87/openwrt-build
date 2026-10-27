@@ -39,6 +39,14 @@ NSS 12.2 设置仅在当前目标为 qualcommax、且源码存在对应选项时
 
 转发接口与伪装接口不预设。插件中留空表示所有接口，如需限于 LAN，请在这两项选择 `br-lan` 后保存。允许入站、转发和伪装会改变 ZeroTier 网络可访问的范围，请确认加入可信网络并在控制端授权设备。
 
+## ImmortalWrt x86 的 Nikki 默认值
+
+固件编译时基于 Nikki 上游配置设置 20 秒启动延迟、TCP/UDP TUN、IPv4/IPv6 绕过中国大陆地址、统一延迟和 TCP 并发，并保留 IPv6 DNS、IPv6 流量接管和 IPv6 DNS 劫持。具体是否生效还受 Nikki 订阅配置及其覆写开关影响。
+
+不打包用户的订阅地址、节点、配置文件名、API 密钥或认证密码；Nikki 主开关保留上游默认关闭，需用户选择自己的配置并启用。首次安装保留上游独立生成访问凭据的机制；保留配置升级不强制改已有 Nikki 设置。
+
+Nikki 开启 IPv6 DNS 与 IPv6 DNS 劫持后，查询可能不经过 dnsmasq；固件中设置的 dnsmasq AAAA 过滤不保证控制 Nikki 或其他独立 DNS 的解析结果。
+
 ## 发布与排查
 
 镜像保留上游文件名，使清单引用保持一致。Release 标签包含设备、日期、运行编号和尝试次数，避免同日重编混用产物。附件包含 `build.config`、`build.diffconfig`、`build-revisions.txt` 和重新生成的 `sha256sums`。

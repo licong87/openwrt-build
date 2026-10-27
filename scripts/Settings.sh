@@ -146,6 +146,8 @@ if grep -qx "CONFIG_TARGET_x86=y" .config; then
         echo "✅ ZeroTier 网络复选框默认值已设置"
         python3 "$customization_root/scripts/NikkiDefaults.py" "$PWD"
         echo "✅ Nikki 非敏感默认选项已设置"
+        python3 "$customization_root/scripts/ServiceDefaults.py" "$PWD"
+        echo "✅ Vlmcsd 和 UPnP 默认选项已设置"
     fi
 fi
 

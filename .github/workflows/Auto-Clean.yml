@@ -8,6 +8,7 @@ on:
   workflow_dispatch:
     inputs:
       NUMBER:
+        description: '每个工作流最少保留的运行记录数'
         default: '5'
         required: false
         type: string
@@ -31,11 +32,8 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Delete Old Releases
-        uses: dev-drprasad/delete-older-releases@master
-        with:
-          keep_latest: ${{inputs.NUMBER || '5'}}
-          delete_tags: true
+      - name: Keep latest release for each firmware
+        run: python3 scripts/CleanFirmwareReleases.py x86
 
       - name: Delete Old Workflows
         uses: Mattraks/delete-workflow-runs@main

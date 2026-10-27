@@ -7,7 +7,7 @@ from pathlib import Path
 path = Path(sys.argv[1]) / 'package/OpenWrt-nikki/nikki/files/nikki.conf'
 text = path.read_text(encoding='utf-8')
 
-# Preserve profile and proxy authentication credentials.
+# Preserve profile; preset the proxy authentication password as requested.
 values = {
     ('config', 'config'): {'start_delay': '20'},
     ('mixin', 'mixin'): {
@@ -52,12 +52,31 @@ for (section_type, section_name), options in values.items():
             block = block.rstrip() + "\n\toption '" + key + "' '" + value + "'\n\n"
     text = text[:start] + block + text[end:]
 
+# Set the default anonymous proxy authentication section's password.
+auth_sections = list(re.finditer(r"(?m)^config[ \t]+['\"]?authentication['\"]?[ \t]*$", text))
+if len(auth_sections) != 1:
+    raise SystemExit('Nikki: expected one default authentication section')
+start = auth_sections[0].start()
+after = auth_sections[0].end()
+next_section = re.search(r'^config[ \t]', text[after:], re.M)
+end = after + next_section.start() if next_section else len(text)
+block = text[start:end]
+password = re.compile(r"""(?m)^([ \t]*option[ \t]+(?:'password'|"password"|password)[ \t]+)(?:'[^']*'|"[^"]*"|[^\s#]+)([ \t]*(?:#.*)?)$""")
+if len(list(password.finditer(block))) != 1:
+    raise SystemExit('Nikki: expected one authentication password')
+block = password.sub(lambda m: m.group(1) + "'123456'" + m.group(2), block, count=1)
+text = text[:start] + block + text[end:]
+
 init_path = Path(sys.argv[1]) / 'package/OpenWrt-nikki/nikki/files/uci-defaults/init.sh'
 init_text = init_path.read_text(encoding='utf-8')
 old = 'uci set nikki.mixin.api_secret="$random"'
 new = 'uci -q get nikki.mixin.api_secret >/dev/null || uci set nikki.mixin.api_secret="$random"'
+old_auth = 'uci set nikki.@authentication[0].password="$random"'
+new_auth = 'uci -q get nikki.@authentication[0].password >/dev/null || uci set nikki.@authentication[0].password="$random"'
+if init_text.count(old_auth) != 1:
+    raise SystemExit('Nikki: upstream authentication initialization changed')
 if init_text.count(old) != 1:
     raise SystemExit('Nikki: upstream init script changed; review API secret initialization')
-init_path.write_text(init_text.replace(old, new), encoding='utf-8')
+init_path.write_text(init_text.replace(old, new).replace(old_auth, new_auth), encoding='utf-8')
 path.write_text(text, encoding='utf-8')
-print('Nikki: preset TUN, IPv6 proxy, delay and mainland bypass; preset API secret; preserve profile and proxy authentication')
+print('Nikki: preset TUN, IPv6 proxy, delay and mainland bypass; preset API secret; preset API and proxy authentication passwords')

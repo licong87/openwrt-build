@@ -140,7 +140,7 @@ jobs:
           make -j"$(nproc)" || make -j1 V=s
           echo "status=success" >> $GITHUB_OUTPUT
           echo "DATE=$(date +"%Y-%m-%d %H:%M:%S")" >> $GITHUB_ENV
-          echo "FILE_DATE=$(date +"%Y.%m.%d")" >> $GITHUB_ENV          
+          echo "FILE_DATE=$(date +"%Y%m%d_%H%M%S")" >> $GITHUB_ENV          
 
       - name: Organize files
         id: organize
@@ -148,7 +148,7 @@ jobs:
         run: |
           cd openwrt/bin/targets/*/*
 
-          # 保留上游镜像名，使 profiles.json 等清单的引用保持有效。
+          # 给发布文件加时间戳，并同步 profiles.json 的文件引用。
           rm -rf packages
           cp "$GITHUB_WORKSPACE/openwrt/.config" build.config
           (cd "$GITHUB_WORKSPACE/openwrt" && ./scripts/diffconfig.sh) > build.diffconfig
@@ -162,6 +162,7 @@ jobs:
             done
             cat "$GITHUB_WORKSPACE/openwrt/custom-package-revisions.txt"
           } > build-revisions.txt
+          python3 "$GITHUB_WORKSPACE/scripts/TimestampRelease.py" . "$FILE_DATE"
           # 重新生成校验清单，包含构建记录。
           find . -maxdepth 1 -type f ! -name sha256sums -print0 | sort -z | xargs -0 -r sha256sum > sha256sums
           sha256sum -c sha256sums

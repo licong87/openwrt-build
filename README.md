@@ -54,7 +54,7 @@ Nikki 开启 IPv6 DNS 与 IPv6 DNS 劫持后，查询可能不经过 dnsmasq；�
 
 ## 发布与排查
 
-镜像保留上游文件名，使清单引用保持一致。Release 标签包含设备、日期、运行编号和尝试次数，避免同日重编混用产物。附件包含 `build.config`、`build.diffconfig`、`build-revisions.txt` 和重新生成的 `sha256sums`。
+发布文件名包含北京时间戳，profiles.json 的文件引用和校验清单同步更新。Release 标签包含设备、日期、运行编号和尝试次数，避免同日重编混用产物。附件包含 `build.config`、`build.diffconfig`、`build-revisions.txt` 和重新生成的 `sha256sums`。
 
 下载使用 HTTP 错误检查和重试，空文件、失败下载和解压错误会中止构建。HTTP 成功和非空检查并不验证规则库的内部格式。
 
@@ -63,3 +63,5 @@ Nikki 开启 IPv6 DNS 与 IPv6 DNS 劫持后，查询可能不经过 dnsmasq；�
 `patch/0001-fix-upnp.patch` 是历史补丁，目前未被工作流应用。本次保留文件，不自动启用。
 
 
+
+Release 标题及发布文件名包含北京时间戳（年月日_时分秒）；profiles.json 与 sha256sums 保持引用和校验一致。

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Preset only the ZeroTier network checkboxes in ImmortalWrt and LibWrt x86 builds."""
+"""Preset only the ZeroTier network defaults in ImmortalWrt and LibWrt x86 builds."""
 import re
 import sys
 from pathlib import Path
@@ -33,7 +33,7 @@ for name in ('enabled', 'allow_managed', 'fw_allow_input', 'fw_allow_forward', '
 new_ui = head + marker + body
 
 # Supply an empty example network, never embed the user's ID or activate the
-# upstream example ID. Leave global service, interfaces and other options alone.
+# upstream example ID. Leave global service and other options alone.
 start = re.search(r"(?m)^config network ['\"]earth['\"]\s*$", config)
 if not start:
     raise SystemExit('ZeroTier: cannot find default network earth; review upstream config')
@@ -50,9 +50,16 @@ id_match = id_pattern.search(block)
 if not id_match or id_match.group(3) not in ('', '8056c2e21c000001'):
     raise SystemExit('ZeroTier: unrecognized example network ID; not replacing it')
 block = id_pattern.sub(lambda m: m.group(1) + "''", block, count=1)
+# Limit the preset network's forwarding and masquerading to the LAN bridge.
+for key in ('fw_forward_ifaces', 'fw_masq_ifaces'):
+    existing = re.compile(r"(?m)^[ \t]*(?:option|list)[ \t]+" + re.escape(key) + r"[ \t]+")
+    if existing.search(block):
+        raise SystemExit(f'ZeroTier: existing {key}; review upstream config')
+    header_end = block.index("\n")
+    block = block[:header_end + 1] + "\tlist " + key + " 'br-lan'\n" + block[header_end + 1:]
 new_config = config[:start.start()] + block + config[end_index:]
 
 # Validate both outputs before touching either source file.
 ui_path.write_text(new_ui, encoding='utf-8')
 config_path.write_text(new_config, encoding='utf-8')
-print('ZeroTier: preset network checkboxes; leave network ID and interfaces empty')
+print('ZeroTier: preset network checkboxes; leave network ID empty and limit interfaces to br-lan')

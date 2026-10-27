@@ -10,6 +10,26 @@ config_path = root / 'feeds/packages/net/zerotier/files/etc/config/zerotier'
 ui = ui_path.read_text(encoding='utf-8')
 config = config_path.read_text(encoding='utf-8')
 
+# Set global options while keeping the service disabled and the secret empty.
+global_start = re.search(r"(?m)^config zerotier ['\"]global['\"]\s*$", config)
+if not global_start:
+    raise SystemExit('ZeroTier: global section not found')
+global_end_match = re.search(r'^config\s', config[global_start.end():], re.M)
+global_end = global_start.end() + global_end_match.start() if global_end_match else len(config)
+global_block = config[global_start.start():global_end]
+for key, value in (('enabled', '0'), ('port', '9993'), ('local_conf_path', '/etc/zerotier.conf'),
+                   ('config_path', '/etc/zerotier'), ('copy_config_path', '0'), ('fw_allow_input', '1')):
+    opt = re.compile(r"(?m)^([ \t]*option[ \t]+" + re.escape(key) + r"[ \t]+)(?:'[^']*'|\"[^\"]*\"|[^\s#]+)[ \t]*$")
+    matches = list(opt.finditer(global_block))
+    if len(matches) > 1:
+        raise SystemExit(f'ZeroTier: duplicate global {key}')
+    if matches:
+        global_block = opt.sub(lambda m: m.group(1) + "'" + value + "'", global_block, count=1)
+    else:
+        header_end = global_block.index("\n")
+        global_block = global_block[:header_end + 1] + "\toption " + key + " '" + value + "'\n" + global_block[header_end + 1:]
+config = config[:global_start.start()] + global_block + config[global_end:]
+
 # The network and global forms both contain fw_allow_input; restrict changes
 # to the network grid. Explicit writes prevent LuCI from eliding defaults.
 marker = "s = m.section(form.GridSection, 'network'"

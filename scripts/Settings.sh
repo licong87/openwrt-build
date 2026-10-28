@@ -118,7 +118,18 @@ mkdir -p files/etc/nikki/run/ui
 download "$asset_tmp/zashboard.zip" \
 https://github.com/Zephyruso/zashboard/releases/latest/download/dist-cdn-fonts.zip
 
-unzip -oq "$asset_tmp/zashboard.zip" -d files/etc/nikki/run/ui
+# 支持压缩包入口位于根目录或 dist/，让 /ui/ 直接找到 index.html。
+mkdir -p "$asset_tmp/dashboard"
+unzip -oq "$asset_tmp/zashboard.zip" -d "$asset_tmp/dashboard"
+if [[ -f "$asset_tmp/dashboard/index.html" ]]; then
+    dashboard_root="$asset_tmp/dashboard"
+elif [[ -f "$asset_tmp/dashboard/dist/index.html" ]]; then
+    dashboard_root="$asset_tmp/dashboard/dist"
+else
+    echo "错误：zashboard 压缩包中找不到 index.html" >&2
+    exit 1
+fi
+cp -a "$dashboard_root/." files/etc/nikki/run/ui/
 
 echo "✅ Dashboard 安装完成"
 
